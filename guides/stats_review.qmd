@@ -1,27 +1,41 @@
 ---
 title: "Statistics Review"
 author: "Anthony Tricarico"
-format: pdf
-toc: true
+link-citations: true
+number-sections: true
+format:  
+  pdf:
+    toc: true                 # Adds a TOC for PDF as well
+    margin-top: 1.5cm         # Sets top margin for PDF
+    margin-left: 2cm          # Left margin for better readability
+    margin-right: 2cm         # Right margin for better readability
+    keep-tex: true            # Keeps the intermediate .tex file for debugging/adjustments
+
+
+# Aesthetic options for code rendering
+code-block-style: github      # Styles code blocks similar to GitHub's appearance
+code-fold: true               # Allows readers to fold/unfold code blocks
+code-overflow: wrap           # Ensures code stays within margins
+page-layout: article          # Article layout keeps focus on content
 editor: visual
 ---
 
-## Intro
+# Intro
 
 This document is a collection of useful statistical concepts that will help better understand the topics of data analysis and forecasting. Depending on whether you have already taken statistics class you might find some concepts that you already know well, if that is the case feel free to skip forward or just skim through this document. Otherwise, I am sure that you will find this document helpful. Although your [textbook](https://otexts.com/fpp3/index.html) is very good, it assumes you have prior knowledge about R and statistics and if that is not the case you might find it hard at times to fully grasp what is in it. For the purpose of this short document, topics will be divided into:
 
 1.  Descriptive statistics
 2.  Inferential statistics
 
-## Descriptive statistics
+# Descriptive statistics
 
-Descriptive statistics is the field of the discipline that deals with summarizing and making large quantities of data understandable highlighting their main features to prepare for analysis. It does so through [basic algebra](https://www.khanacademy.org/math/algebra-basics) and [visuals](https://towardsdatascience.com/a-comprehensive-guide-to-the-grammar-of-graphics-for-effective-visualization-of-multi-dimensional-1f92b4ed4149), which might help grasp specific features of the data that would otherwise be very hard to spot. With R you can generate summaries and plots of large quantities of data, but it is important to understand what these results convey and how you should interpret them.
+Descriptive statistics is the field of statistics that deals with summarizing and making large quantities of data understandable, highlighting their main features to prepare for analysis. It does so through [basic algebra](https://www.khanacademy.org/math/algebra-basics) and [visuals](https://towardsdatascience.com/a-comprehensive-guide-to-the-grammar-of-graphics-for-effective-visualization-of-multi-dimensional-1f92b4ed4149), which might help grasp specific features of the data that would otherwise be very hard to spot. With R you can generate summaries and plots of large quantities of data, but it is important to understand what these results convey and how you should interpret them.
 
-### Measures of central tendency
+## Measures of central tendency
 
 Most of the times, you are interested in understanding what value your observations (i.e., rows in your dataset) cluster around. In other words, you might be interested in knowing what are the most frequent values in your dataset. For that, you can use various [*measures of central tendency*](https://www.abs.gov.au/statistics/understanding-statistics/statistical-terms-and-concepts/measures-central-tendency#:~:text=There%20are%20three%20main%20measures,mean). Among these, the *mean* (a.k.a., average) is probably the most popular followed by the *median* and the *mode*. Let's take a look at them one by one.
 
-#### Mean
+### Mean
 
 The mean is defined as the sum of all values that a specific variable (i.e., a column in a dataset) in the dataset takes divided by the number of observations for your variable (i.e., the number of rows). Compactly, you can write this with the following notation.
 
@@ -62,9 +76,9 @@ abline(v = mean(var_skewed), col="red", lwd=3)
 
 Notice how in the figure above the mean does not do a good job at identifying the value around which the data cluster. To improve on this, we introduce the *median*.
 
-#### Median
+### Median
 
-The [median](https://www.khanacademy.org/math/statistics-probability/summarizing-quantitative-data/mean-median-basics/a/mean-median-and-mode-review#:~:text=Median%3A%20The%20middle%20number%3B%20found,mean%20of%20those%20two%20numbers).) is a measure of central tendency that is not sensitive to extreme values in the dataset (a.k.a., [*outliers*](https://en.wikipedia.org/wiki/Outlier)). It corresponds to the middle point in an ordered set of data (when the total $n$ is odd) or the mean of the two central middle observations ( when the total $n$ is even). To show how this measure works, let's take a look at how the median behaves when we plot it on the histogram of our data.
+The [median](https://www.khanacademy.org/math/statistics-probability/summarizing-quantitative-data/mean-median-basics/a/mean-median-and-mode-review#:~:text=Median%3A%20The%20middle%20number%3B%20found,mean%20of%20those%20two%20numbers) is a measure of central tendency that is not sensitive to extreme values in the dataset (a.k.a., [*outliers*](https://en.wikipedia.org/wiki/Outlier)). It corresponds to the middle point in an ordered set of data (when the total $n$ is odd) or the mean of the two central middle observations (when the total $n$ is even). To show how this measure works, let's take a look at how the median behaves when we plot it on the histogram of our data.
 
 ```{r}
 median(var)
@@ -86,15 +100,15 @@ abline(v = median(var_skewed), col="red", lwd=3)
 
 from here you can clearly see that when data is highly skewed, the median is able to better pinpoint where most of the data will be located.
 
-#### Mode
+### Mode
 
-Finally, there is the mode which is simply the value of the observation that occurs most frequently. Let's have a look at the sample data we have to compute it. For that we can use the `table()` function in R and pass in the variable `var` as an argument to it which will return a [*frequency table*](https://www.ncl.ac.uk/webtemplate/ask-assets/external/maths-resources/statistics/data-presentation/frequency-distribution-tables.html#:~:text=A%20frequency%20table%20is%20a,qualitative%20or%20quantitative%20discrete%20data.)showing how often each value appears in our variable.
+Finally, there is the mode which is simply the value of the observation that occurs most frequently. Let's have a look at the sample data we have to compute it. For that we can use the `table()` function in R and pass in the variable `var` as an argument to it which will return a [*frequency table*](https://www.ncl.ac.uk/webtemplate/ask-assets/external/maths-resources/statistics/data-presentation/frequency-distribution-tables.html#:~:text=A%20frequency%20table%20is%20a,qualitative%20or%20quantitative%20discrete%20data.) showing how often each value appears in our variable.
 
 ```{r}
 table(var)
 ```
 
-The mode for the variable above is not unique (1,2). Indeed, the [distribution](https://aarongullickson.github.io/stat_book/the-distribution-of-a-variable.html) of a variable might have one or more modes while others don't even have one.
+The mode for the variable above is not unique (both 1 and 2 are modes). Indeed, the [distribution](https://aarongullickson.github.io/stat_book/the-distribution-of-a-variable.html) of a variable might have one or more modes while others don't even have one.
 
 ```{r}
 table(var_skewed)
@@ -106,19 +120,19 @@ Instead, for the case above, the mode is unique and is the value 1.
 As a side note, consider the following variable $X$ which can take values 1,2,3,4,5. Since each value appears with the same frequency (e.g., $\frac{1}{5}$), $X$ does not have a mode!
 :::
 
-### Measures of dispersion
+## Measures of dispersion
 
 It is also useful to quantify by how much variables vary on average. These measures are often referred to as [measures of dispersion](https://www.geeksforgeeks.org/measures-of-dispersion/) and there are a few which are fundamental for any statistical application.
 
-#### Variance
+### Variance
 
 The [variance](https://www.investopedia.com/terms/v/variance.asp) of a variable measures the spread between its values and its mean.
 
 $$
-\sigma^2 = \frac{1}{N} \sum_{i=1}^N (X_i - \mu)^2
+\sigma^2 = \frac{1}{N} \sum_{i=1}^N (x_i - \mu)^2
 $$
 
-The term $(X_i - \mu)$ is often referred to as *deviation from the mean*. When we add all those up (notice the $_i$ to the bottom right of the $X$) and we square them we have a measure of how much values of a variable are far from their mean. Since we want an average value, we divide the *squared sum of all the deviations* by the sample size $N$.
+The term $(x_i - \mu)$ is often referred to as *deviation from the mean*. When we add all those up (notice the $_i$ to the bottom right of the $x$) and we square them we have a measure of how far values of a variable are from their mean. Since we want an average value, we divide the *squared sum of all the deviations* by the sample size $N$.
 
 ::: callout-note
 $\mu$ is referred to as the [population mean](https://www.wallstreetmojo.com/sample-mean-vs-population-mean/).
@@ -148,7 +162,7 @@ For example, if my variable $R$ representing the return on a stock is denominate
 Next we learn how to address this problem.
 :::
 
-#### Standard deviation
+### Standard deviation
 
 Standard deviation is defined as the square root of the variance. This solves the issue with the squared units of measures and brings everything back to unit scale so that the results become easier to interpret. In R you use `sd()` to compute the standard deviation of a variable.
 
@@ -160,20 +174,24 @@ sd(var)
 sd(var_skewed)
 ```
 
-##### Additional resources
+### Additional resources
 
 We've seen most of the basics by now, but in case you want to learn more about measures of dispersion here is a list of topics which you might find useful:
 
 1.  [Quantiles and Quartiles](https://www.scribbr.com/statistics/quartiles-quantiles/#:~:text=A%20quartile%20is%20a%20type,sorted%20data%20into%20q%20parts.)
 2.  [Interquartile range](https://en.wikipedia.org/wiki/Interquartile_range)
 
-### Probability Distributions
+# Inferential statistics
+
+Inferential statistics refers to how we can make inferences about a population starting from a [representative sample](https://www.investopedia.com/terms/r/representative-sample.asp#:~:text=A%20representative%20sample%20is%20a,three%20males%20and%20three%20females.) drawn from it.
+
+## Probability Distributions
 
 [Probability theory](https://en.wikipedia.org/wiki/Probability_theory) refers to the set of tools mathematicians developed to study and model uncertainty. Here we are just going to introduce elementary topics to not make things too complicated.
 
-When we try to understand what are the chances that something happen or does not happen, we are basically questioning whether an *event* will or will not take place. An event is an observable outcome which can either happen or not. For instance, if my event $A$ is defined as observing a 2 on a single die roll it can either happen (I roll the die and I get a 2) or it does not happen (I get a number other than 2). Now, assuming that the die is fair (i.e., every number as an equal chance to show), we can assign a probability to the event that we get a 2, denoted by $P(A) = \frac{1}{6}$ (meaning there is just a single 2, over a total of 6 possible numbers that I can get from a single die roll). In general, we can denote by $X$ a random variable that takes on each roll the value of the observed number. Then, $X$ is random because its value cannot be predetermined exactly *a priori* but is the result of the following die roll.
+When we try to understand what are the chances that something happen or does not happen, we are basically questioning whether an *event* will or will not take place. An event is an observable outcome which can either happen or not. For instance, if my event $A$ is defined as observing a 2 on a single die roll it can either happen (I roll the die and I get a 2) or it does not happen (I get a number other than 2). Now, assuming that the die is fair (i.e., every number as an equal chance to show), we can assign a probability to the event that we get a 2, denoted by $P(A) = \frac{1}{6}$ (meaning there is just **a single 2**, over a **total of 6 possible numbers** that I can get from a single die roll). In general, we can denote by $X$ a random variable that takes on each roll the value of the observed number. Then, $X$ is random because its value cannot be predetermined exactly [*a priori*](https://en.wikipedia.org/wiki/A_priori_and_a_posteriori) but is the result of the following die roll.
 
-#### Binomial distribution
+### Binomial distribution
 
 Knowing this, we can use a probability distribution to compute the probability that we observe a specific number of 2's over a series of $n$ die rolls. This is an example of a [binomial experiment](https://www.statisticshowto.com/probability-and-statistics/binomial-theorem/binomial-experiment/). If you are interested you can learn more about it but for now it suffices to say that we can model this using a [binomial distribution](https://en.wikipedia.org/wiki/Binomial_distribution). Plotting the distribution we observe that rolling the die 100 times yields the following.
 
@@ -185,19 +203,18 @@ observed_outcomes <- sample(possible_outcomes, size = 100,
 
 hist(observed_outcomes, breaks = c(0,1,2,3,4,5,6), freq = F, 
      labels = T, ylim = c(0,.3))
-table(observed_outcomes)
 ```
 
-In this case 19% of all rolls (meaning 19 rolls) produced had as an outcome a 2. We could have computed this probability before conducting the experiment so as to form an expectation of what the outcome of the die roll would more likely be by multiplying the probability of observing a 2 on a die roll ($P(A)=\frac{1}{6}$) by the number of times the die is rolled ($n=100$) and the expected numbers of 2 would have been approximately 17, not that far from what we observed!
+In this case 19% of all rolls (meaning 19 rolls) produced had as an outcome a 2. We could have computed this probability before conducting the experiment so as to form an expectation of what the outcome of the die roll would more likely be by multiplying the probability of observing a 2 on a die roll ($p=\frac{1}{6}$) by the number of times the die is rolled ($n=100$) and the expected numbers of 2 would have been approximately 17, not that far from what we observed!
 
-#### Normal distribution
+### Normal distribution
 
-If you had to learn about only one distribution, let that distribution be the [Normal Distribution](https://www.investopedia.com/terms/n/normaldistribution.asp#:~:text=The%20Bottom%20Line-,Normal%20distribution%2C%20also%20known%20as%20the%20Gaussian%20distribution%2C%20is%20a,defined%20by%20the%20standard%20deviation.). There are so many important things there are to say about this distribution, but let's keep it simple:
+If you had to learn about only one distribution, let that be the [Normal Distribution](https://www.investopedia.com/terms/n/normaldistribution.asp#:~:text=The%20Bottom%20Line-,Normal%20distribution%2C%20also%20known%20as%20the%20Gaussian%20distribution%2C%20is%20a,defined%20by%20the%20standard%20deviation.). There are so many important things there are to say about this distribution, but let's keep it simple:
 
-1.  it is used to model many real-life phenomena
-2.  it depends on only two parameters its mean (\$\mu\$) and its variance (\$\sigma\^2\$)
+1.  it is used to model many real-life phenomena that take on a [continuum of values](https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://www.youtube.com/watch%3Fv%3DQxqxdQ_g2uw&ved=2ahUKEwithPq87daJAxVr_7sIHWqJG7QQwqsBegQIMRAF&usg=AOvVaw0dJpzZRYGkC9qx1omRy_Xa) (and not a discrete number of values, like the previous die roll example)
+2.  it depends on only two parameters: its mean (\$\mu\$), and its variance (\$\sigma\^2\$)
 3.  given some assumptions, any distribution can be approximated by the Normal Distribution! This is a result of the [Central Limit Theorem](https://www.investopedia.com/terms/c/central_limit_theorem.asp).
-4.  it has many nice properties and is used all over statistics and forecasting, along with its sample counterpart being the [T distribution](https://www.investopedia.com/terms/t/tdistribution.asp)
+4.  it has many nice properties (symmetry about $\mu$, bell shape, etc.) and is used all over statistics and forecasting, along with its sample counterpart being the [T distribution](https://www.investopedia.com/terms/t/tdistribution.asp)
 
 Let's plot it out
 
@@ -210,8 +227,146 @@ abline(v=mean(x), col = "red", lwd=2)
 
 ```
 
-Right, there is a special case of the normal distribution which occur when $\mu=0$ and $\sigma^2=1$. This is called the [standard normal distribution](https://www.scribbr.com/statistics/standard-normal-distribution/) (represented by $Z$). This means that one can [*standardize*](https://www.listendata.com/2017/04/how-to-standardize-variable-in-regression.html)any normal random variable to bring it back to this standard scale. To do that, you simply need to subtract the *mean* of the variable you are standardizing and divide by its *standard deviation*.
+there is also a special case of the normal distribution which occur when $\mu=0$ and $\sigma^2=1$. This is called the [standard normal distribution](https://www.scribbr.com/statistics/standard-normal-distribution/) (represented by $Z$). This means that one can [*standardize*](https://www.listendata.com/2017/04/how-to-standardize-variable-in-regression.html) any normal random variable to bring it back to this standard scale and obtain a distribution like the one above. To do that, you simply need to subtract the *mean* of the variable you are standardizing and divide by its *standard deviation*.
 
 $$
 Z = \frac{X - \mu}{\sigma}
 $$
+
+### Student's T distribution
+
+Another useful distribution is the [T distribution](https://en.wikipedia.org/wiki/Student%27s_t-distribution). Shape-wise the T distribution has the same nice properties of the standard normal distribution (of which it is a generalization). However, it is common to use this distribution when we do not know the true population parameters (i.e., $\mu$ and $\sigma^2$) and we have to use their sample counterpart as parameters. The T distribution comes with [degrees of freedom](https://www.scribbr.com/statistics/degrees-of-freedom/#:~:text=Degrees%20of%20freedom%2C%20often%20represented,minus%20the%20number%20of%20restrictions.) which are used to assess how many data points are left free to vary after having estimated the population parameters that we need from the sample.
+
+## Tests of hypotheses {#sec-testhyp}
+
+Given two groups of people, you might be interested in understanding which group is taller on average. This can be translated into a test of hypothesis. Let's say you believe group 1 to be taller on average, how would you go about testing this quantitatively? First, let's define the two hypotheses:
+
+$$
+H_0: \mu_1 \leq \mu_2
+$$
+
+$$
+H_a: \mu_1 > \mu_2
+$$
+
+Let's break this down:
+
+1.  Here $H_0$ is known as the [null hypothesis](https://en.wikipedia.org/wiki/Null_hypothesis), and it represents the *status quo* or what we assume to be the truth.
+2.  $H_a$ is the [alternative](https://en.wikipedia.org/wiki/Alternative_hypothesis) (or research) hypothesis, and it is what we want to find evidence for. Note that finding supporting evidence for $H_a$ makes $H_0$ less credible.
+3.  $\mu_i$ for $i = {1,2}$ represents the theoretical population mean of group 1 and 2, which we are trying to infer from our sample data.
+
+Now, it would useful to have a metric that could help us determine whether there is enough supporting evidence for $H_a$ to *reject* $H_0$. To do this, we introduce the concepts of [significance level](https://en.wikipedia.org/wiki/Statistical_significance) (denoted by $\alpha$) and [p-value](https://www.scribbr.com/statistics/p-value/#:~:text=A%20p%2Dvalue%2C%20or%20probability,to%20perform%20your%20statistical%20test.) (denoted by $p$). The p-value of a test is the probability of observing the result of our analysis if we establish that the null hypothesis is true. Of course, a small p-value tells us that what we observed is unlikely to happen if the null hypothesis was effectively true. How small the p-value needs to be to reject $H_0$ depends on the significance level we are using for our tests. Commonly, the .01, .05, and .1 significance levels are the most used ones, but there are scientific fields that require even smaller $\alpha$ (e.g., [physics](https://home.cern/resources/faqs/five-sigma)). Given the concepts of p-value and significance level just discussed, the following method is used to determine whether one should reject or do not reject the null hypothesis:
+
+::: callout-important
+1.  If $p < \alpha \rightarrow$ reject $H_0$
+2.  if $p > \alpha \rightarrow$ do not reject $H_0$
+:::
+
+To go back to our original height problem and to determine whether group 1 is truly taller on average compared to group 2 we need to introduce the t-statistic. The t-statistic comes from the T distribution and it is used to quantify by how much two sample means differ from each other.
+
+```{r}
+set.seed(128) #<1>
+pop_1 <- seq(180,195) #<2>
+pop_2 <- seq(165,180) #<3>
+
+sample_1 <- sample(pop_1, 100, replace = T) #<4>
+sample_2 <- sample(pop_2, 100, replace = T) #<5>
+```
+
+1.  Set the seed to get reproducible results across iterations
+2.  specify that population 1 is made up of individuals with height between 180cm and 195cm
+3.  specify that population 2 is made up of individuals with height between 165cm and 180cm
+4.  sample 100 elements *with replacement* (i.e., allowing for the same value to be drawn multiple times) from population 1
+5.  sample 100 elements *with replacement* from population 2
+
+Let's plot the distribution of the height of the two samples.
+
+```{r}
+hist(sample_1)
+abline(v=mean(sample_1), col="red", lwd=3)
+```
+
+```{r}
+hist(sample_2, xlim = c(164,180))
+abline(v=mean(sample_2), col="red", lwd=3)
+```
+
+Finally, we conduct a t test to determine whether there is a significant difference in means between the two samples.
+
+```{r}
+(t_test <- t.test(sample_1, sample_2, alternative = "greater"))
+```
+
+```{r}
+t_test$p.value
+```
+
+Given a level of significance $\alpha$ = .01 and a $p$ \< .001 we can reject $H_0$. This means that under the assumption that $H_0$ is true, we would be less than 0.1% likely to observe the height distributions that we ended up observing in the two groups. For this reason, $H_0$ does not seem to reflect well what we observed in our experiment and therefore is rejected.
+
+::: callout-important
+Tests of hypotheses are everywhere in inferential statistics, so be sure to have familiarized with what discussed in this section.
+:::
+
+## (Linear) Regression
+
+A linear regression is a model which estimates the (linear) relationship between one variable (dependent variable) and at least one other variable (independent variable). Linear regression is useful in that it quantifies how much the dependent variable changes as we let the independent variable(s) change. We now have a look at what should be clear about all this.
+
+### Simple regression
+
+A simple regression is a regression model with a single independent variable. The equation that describes these models is usually of the form:
+
+$$
+\hat Y_i = \hat\beta_0 + \hat\beta_1X_i
+$$
+
+Where $\hat Y_i$ is the predicted value of $Y$ when the independent variable $X$ takes value $X_i$ and it is multiplied by the estimated slope parameter $\hat\beta_1$ and added to the estimated intercept parameter $\hat\beta_0$. We now have a look at it in code.
+
+```{r}
+library(MASS) #<1>
+(animals <- MASS::Animals) #<2>
+```
+
+1.  import the library `MASS`
+2.  get the Animals dataset from inside the `MASS` library and assign it to the variable `animals`
+
+```{r}
+regression <- lm(brain~body, animals) #<1>
+summary(regression) #<2>
+```
+
+1.  specify a linear model with the `lm()` function. Here we are specifying that `brain` is the dependent variable and `body` is the independent variable. After the comma, we tell R that these two variables should be retrieved from the `animals` dataset we saved before.
+2.  we then call the `summary()` function on our regression to view some important statistics that are returned
+
+From the output of the summary function we learn that the variable `body` is not a significant predictor of `brain` size! To see how we got to this conclusion, go to the column containing the p-value of the `body` variable (the last column). The p-value here is derived from the test of hypothesis that the t-statistic is different from 0. If we were to spell that out using the notation we developed in @sec-testhyp, we would get:
+
+$$
+H_0: t = 0
+$$
+
+$$
+H_a: t \neq 0
+$$
+
+If we compare the t-score of the `body` variable obtained from the `summary` of our regression we see that it is -0.027. Since after running the test the p-value is .9785 \> $\alpha$ = .1 it is concluded that body size is not a significant predictor of brain size in the samples of animals presented in this dataset. Therefore, we cannot interpret the estimated slope ($-4.326e^-4$). This is also the case because the significance for the overall model, reported as the p-value of the F-statistic at the bottom of the summary, is also greater than $\alpha$ = .1.
+
+If you wanted to plot out the line obtained by the above linear model, you can use this code to visualize it
+
+```{r}
+library(ggplot2)
+ggplot(animals, aes(x=body, y=brain)) + #<1>
+  geom_point() + #<2>
+  geom_smooth(method="lm", se=F) #<3>
+```
+
+1.  initializes a blank plot specifying what should be on the x and y axes
+2.  adds a geom layer to plot points like in a scatterplot
+3.  adds the estimated regression line
+
+Now that we plotted the data, however, we can clearly see that there is an observation that is far to the right and is skewing the distribution of `body`. Should we drop that observation to improve our regression model or should we leave it there? Feel free to continue the analysis with the tools you developed so far!
+
+### Additional resources
+
+Since it is impossible to discuss everything about regressions in these few pages, here are some resources that you can find useful when trying to make sense of this topic:
+
+1.  [YT short intro to regression Video](https://youtu.be/14mkCpJ7tKs?si=gF17WGfWBTTOf38z)
+2.  [YT Playlist on regression](https://youtube.com/playlist?list=PLblh5JKOoLUIzaEkCLIUxQFjPIlapw8nU&si=ldwNn7dwyE6ts7Q-)
