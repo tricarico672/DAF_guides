@@ -1,0 +1,281 @@
+---
+title: "Code Explanation (HW2)"
+author: "Anthony Tricarico"
+editor: visual
+format: 
+  pdf:
+    toc: true
+    number-sections: true
+    colorlinks: true
+    documentclass: scrartcl
+    papersize: letter
+    geometry: margin=1in
+    copy-code: true
+---
+
+# Explanation of code
+
+Here follows a simple explanation of the most used pieces of code encountered so far which can be useful for different purposes.
+
+## Loading libraries
+
+These are the libraries we will be using for now. I will import some extra ones because I might need them later on.
+
+```{r}
+#| message: false
+#| warning: false
+library(tsibbledata)
+library(TSA)
+library(ggplot2)
+library(fpp3)
+library(gridExtra)
+library(tidyquant)
+library(forecast)
+library(readr)
+library(latex2exp)
+library(fma)
+```
+
+## Useful functions to generate sequences
+
+It is common in the exercises encountered so far to have to generate some dates in a specific range, either because those are not present in the original dataset or because they are not in the correct datatype (i.e., not formatted as dates). The following functions are useful to generate dates (or better, vectors of dates) which can then be bound to the original dataset (i.e., added as a column)
+
+The built-in *R* function *seq* generates sequences of number in the range specified by its arguments (*from* and *to*) in steps specified by the argument *by*.
+
+```{r}
+seq(from = 1, to = 10, by = 2)
+```
+
+Even though the built-in date type in *R* is at heart a number (when converted to its integer form) it is often better to work with functions that are specific to dates such as *seq.Date* which returns a vector of dates employing a similar logic to *seq*.
+
+```{r}
+#Generates dates from January 1st 2020 to December 31st 2020 
+#in monthly steps (i.e., one date for each month)
+seq.Date(from = as.Date("2020-01-01"), to = as.Date("2020-12-31"), by = "month")
+```
+
+::: callout-tip
+Notice how you can pass arguments into R functions. Arguments can be passed in either by following an order of positions or by calling the label (i.e., the name) associated to that argument and pass the input after the = sign. To experiment with this idea notice that:
+
+seq.Date(from = as.Date("2020-01-01"), to = as.Date("2020-12-31"), by = "month")
+
+and
+
+seq.Date(as.Date("2020-01-01"), as.Date("2020-12-31"), "month")
+
+produce exactly the same result. This is useful and applies to all functions in R. Try it for yourself!
+:::
+
+## Tsibbles
+
+Tsibbles (short form Time Series Tibbles) allow us to model time series data in R. Tsibbles have much in common with tibbles (i.e., common data frames which you can think of as Excel spreadhseets), however they are indexed by dates. You can think of an index as a column that adds structure to the data you are analyzing (in this case you are adding a temporal structure to your dataset). This allows to perform operations that require data to be ordered chronologically (e.g., computing autocorrelation with ACF(), plotting correlograms with autoplot(), and so on)
+
+```{r}
+obs <- seq(1, 10) #a vector containing numbers from 1 to 10
+dates <- seq.Date(from = as.Date("2020-01-01"), to = as.Date("2020-01-10"), by = "day")
+
+tbl <- tibble(obs, dates)
+
+tsbl <- tsibble(
+  tbl,
+  index = dates
+)
+
+tsbl
+```
+
+## Computing statistics for Time Series
+
+So far in the course you've explored some useful statistics that can be computed to describe your time series, spot patterns in your data, and determine the presence of the source of potential problems for your forecasts (e.g., autocorrelation). This is a brief recap of what has been done so far in the exercises.
+
+### Autocorrelation
+
+Autocorrelation refers to how much correlated (if any) the observations in a time series are. Keep in mind that autocorrelation computes the correlation between a variable and its *lagged* values. A simple example follows below:
+
+```{r}
+hours <- read_csv("Homework2/hours.dat")
+
+hours$month <- seq.Date(as.Date("1982/07/01"), as.Date("1987/06/01"), "month")
+
+hours <- hours %>%
+  mutate(month = yearmonth(month)) #convert full dates to year-month representation
+
+(hours_ts <- as_tsibble(hours, index = month))
+```
+
+```{r}
+(auto_corr <- ACF(hours_ts, y = hours)) #the outside () make the output appear directly
+```
+
+```{r}
+autoplot(auto_corr, y = hours)
+```
+
+## Data Transformations
+
+Transformations refer to the use of mathematical functions to correct for some undesirable features in the data while retaining as much information as possible. To better understand what this refers to, let's have a look at Exercise 2 from HW2.
+
+First, let's have a look at what the sample() function does.
+
+```{r}
+id_number <- 254978
+
+set.seed(id_number)
+sample(aus_retail$`Series ID`,1)
+```
+
+You can notice that sample() returns a randomly sampled element of the Series ID column in the aus_retail dataframe. We use set.seed() to make sure that every time we run the function it will return the same series. This is done to preserve code reproducibility since when you send your R script to someone else they will get the same result out of it (i.e., "A3349480L").
+
+```{r}
+id_number <- 254978
+
+set.seed(id_number) #set seed for code reproducibility 
+#(the sample() function depends on pseudo-random generation 
+#and this ensures we get always the same sample)
+
+#filter the dataset called "aus_retail" 
+myseries <- aus_retail |>
+  filter(`Series ID` == sample(aus_retail$`Series ID`,1))
+
+myseries
+```
+
+Knowing that sample() returns "A3349480L" helps you also understand what is going on in the cell above. In short, the aus_retail dataframe is being filtered and only the rows which have Series ID equal to "A3349480L" are kept and assigned to the variable *myseries* (meaning we can later refer to this filtered dataframe by the name *myseries*).
+
+Now we move on and explore Box-Cox transformations, which are transformations used to normalize data that do not appear to be [normally distributed](https://www.scribbr.com/statistics/normal-distribution/#:~:text=In%20a%20normal%20distribution%2C%20data%20are%20symmetrically%20distributed%20with%20no,same%20in%20a%20normal%20distribution.). You can spot deviations from normality in different ways, either through data visualizations or through specific tests (don't worry for now you don't need to know about this stuff, just focus on visualizations)
+
+```{r}
+guer <- features(myseries, Turnover, features = guerrero) 
+#use guerrero function to determine a suitable lambda for the box-cox transformation
+lambda <- guer$lambda_guerrero 
+#assign the computed lambda to a variable with the same name (lambda)
+myseries$Turnover_transformed <- box_cox(myseries$Turnover, lambda = lambda) 
+#add the transformed turnover column to the original dataset 
+#and assign the name "Turnover_transformed"
+
+myseries
+
+```
+
+```{r}
+hist(myseries$Turnover_transformed, main = "Transformed Data") 
+#visualize the improvements in normality with this plot...
+```
+
+```{r}
+hist(myseries$Turnover, main = "Original Data") 
+#... compared to this more skewed distribution
+```
+
+Also, you can use a quantile-quantile plot which shows how much of the data falls within specified quantiles (represented on the x-axis). Normality here is represented by points that are closer to the diagonal line.
+
+```{r}
+qqnorm(y = myseries$Turnover_transformed)
+#quantile-quantile plot to show the normality of the data (closer to the diagonal is better)
+```
+
+```{r}
+qqnorm(y = myseries$Turnover)
+```
+
+```{r}
+autoplot(myseries, box_cox(Turnover, lambda)) + 
+  labs(y = "", 
+       title =TeX(paste0("Transformed turnover with $\\lambda$ = ",
+                         round(lambda,2))))
+
+```
+
+it is concluded that a box-cox transformation with lambda = -0.20... improves the fit to normality of the data as shown by the quantile-quantile plot and the histogram.
+
+## Data visualization
+
+We just scratched the surface of what data visualization can do, so in Exercise 3 of HW2 we delve a little deeper into that.
+
+```{r}
+labour <- fma::labour
+
+dates <- seq.Date(from = as.Date("1978-02-01"), to = as.Date("1995-08-01"), by = "month")
+
+labour <- as.data.frame(labour)
+labour$date <- dates
+names(labour) <- c("labor_force", "month_year")
+
+labour <- labour %>%
+  mutate(month_year = yearmonth(month_year))
+
+(labour_ts <- as_tsibble(labour, index = month_year))
+```
+
+As usual, we import the dataset and perform the routine steps to organize it into a nice tsibble complete with a column for dates. Now, we are ready to produce some plots to explore some features of this time series.
+
+### Time Plot
+
+```{r}
+autoplot(labour_ts, .vars = labor_force) #time plot
+```
+
+You can plot a time plot very easily with autoplot(). This allows you to see trends in data.
+
+### Correlogram
+
+```{r}
+## correlogram
+autocorr <- ACF(labour_ts, labor_force)
+autoplot(autocorr) #huge autocorrelation across months
+```
+
+To compute a correlogram you follow these steps:
+
+1.  you estimate the auto correlation function with ACF(dataset, column_in_dataset) and assign it to a variable (autocorr in my example above)
+2.  then you pass that variable as an argument in autoplot() and that will do the trick.
+
+### Seasonality Plots
+
+They allow you to check for the presence of seasonality (trends based on time periods) in your data.
+
+```{r}
+## seasonality plot
+gg_season(labour_ts, labor_force) + 
+  labs(y = "Labor Force",
+       title = "Seasonal plot: Labor Force in AUS")
+```
+
+For these plots you use gg_season() and specify the dataset and the column to plot. You can add (literally with a + sign) other layers to your plot. In my example I added y labels and a title. If you learn this syntax you can be sure that you can use it on any other ggplot you'll ever do in your life.
+
+From this seasonal plot we learn that every year around December more people join the labor force.
+
+### Subseries Plots
+
+```{r}
+gg_subseries(labour_ts, labor_force) +
+  labs(y = "Labor Force",
+       title = "Subseries plot: Labor Force in AUS")
+```
+
+In these plots we can see how the series evolves across months in different years. The syntax is the same as the one for seasonality plots, except for the function gg_subseries() of course.
+
+```{r}
+hist(labour_ts$labor_force) 
+#the distribution appears to be bimodal, therefore a smoothing through box-cox would make sense
+```
+
+```{r}
+qqnorm(y = labour_ts$labor_force)
+```
+
+```{r}
+lambda <- features(labour_ts, .var = labor_force, features = guerrero)$lambda_guerrero
+transformed_labforce <- box_cox(labour_ts$labor_force, lambda)
+
+labour_ts$transformed_labforce <- transformed_labforce
+labour_ts
+```
+
+```{r}
+hist(labour_ts$transformed_labforce) 
+#however the distribution remains highly bimodal and normality 
+#does not seem to be improved by much
+```
+
+For the last step of the exercise we compute again the Box-Cox transformation for this time series, but it does not do much to improve upon the normality of this specific time series.

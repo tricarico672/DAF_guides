@@ -1,0 +1,14 @@
+---
+title: "Chapter2_review"
+author: "Anthony Tricarico"
+format: pdf
+editor: visual
+---
+
+# Chapter 2 (Review)
+
+::: callout-warning
+The following review is meant to summarize the main topics you should have already tackled in class. Whenever possible, additional resources will be mentioned to help you review pre-requisites for the concepts discussed therein. The online book is already a good resource which can answer most of your questions. If you find something in the book that is not clear, you can ask me for clarifications, but please try and read the book first.
+
+Do not view this as a study guide, but just as a reference you can look at whenever you have troubles with R.
+:::
