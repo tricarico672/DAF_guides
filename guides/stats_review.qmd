@@ -181,9 +181,67 @@ We've seen most of the basics by now, but in case you want to learn more about m
 1.  [Quantiles and Quartiles](https://www.scribbr.com/statistics/quartiles-quantiles/#:~:text=A%20quartile%20is%20a%20type,sorted%20data%20into%20q%20parts.)
 2.  [Interquartile range](https://en.wikipedia.org/wiki/Interquartile_range)
 
+### The Two Variables Case
+
+Sometimes, we are not interested only in describing the behavior of a single variable but we might want to study how it interacts with another variable. Quantifying this relationship is very easy thanks to some tools such as the **covariance** of two variables and the **correlation coefficient**.
+
+#### Covariance
+
+Covariance refers to how much two variables co-vary (i.e., vary together). It is useful to look at the formula of how it is computed to derive some intuition about how it works.
+
+$$
+\text{Cov}(X, Y) = \frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})(y_i - \bar{y})
+$$
+
+In other words, the covariance of two variables $X$ and $Y$ is determined by how many times they are both above (or below) their respective means, $\bar{x}$ and $\bar{y}$. Intuitively, if they are both above (or below) their mean we would be multiplying together two numbers with the same sign, and the result will be a positive number. Then, following simple reasoning, if we add together many positive numbers we get a number that is larger than if we were to add an equal number of some negative and some positive numbers together (assuming they are the same in absolute value). It follows that two variables that are more often than not above their means, at the same time, will have a higher covariance, meaning that these variables will be growing (or shrinking) together.
+
+The opposite of this is the case when two variables have a covariance that is close to 0, which is the same as saying that the two variables are independent (i.e., knowing that one of the variables changes tells me nothing about how the other behaves).
+
+::: callout-caution
+Covariance has the same issue that variance has: squared units of measure. We learn how to deal with this next.
+:::
+
+#### Correlation coefficient
+
+In a similar way to how the standard deviation solves the issue of squared units of measures for the variance, so does the correlation coefficient for the covariance. Here is its formula:
+
+$$
+r = \frac{\operatorname{Cov}(X, Y)}{\sigma_X \sigma_Y}
+$$
+
+From here, we notice some important properties of $r$:
+
+1.  It is scaled by the product of the standard deviation of the two variables, and therefore $r$ now always falls in the range \[-1,1\]. This allows us to have boundaries to interpret the strength of the relationship between $X$ and $Y$.
+2.  The closer $|r|$ is to 1 (in [absolute value](https://en.wikipedia.org/wiki/Absolute_value)) the stronger the relationship between the two variables.
+3.  The sign of $r$ is determined solely by the sign of the $\operatorname{Cov}(X, Y)$ at the numerator since the standard deviations at the bottom are always positive values.
+
+::: callout-important
+Notice that $r$ measures the strength of *linear correlation* between two variables. This means that if $X$ and $Y$ are linked by a non-linear relationship, $r$ will not be able to detect it! We show this with an example.
+:::
+
+```{r}
+lin_1 <- seq(1,10) #<1>
+lin_2 <- seq(-1,-10) #<2>
+
+cor(lin_1, lin_2) #<3>
+```
+
+1.  generate sequence of numbers from 1 to 10
+2.  generate sequence of numbers from -1 to -10
+3.  compute the `cor`relation between these two linear sequences
+
+```{r}
+sq_2 <- lin_1^2 #<1>
+
+cor(lin_1, sq_2) #<2>
+```
+
+1.  `sq_2` is the square of the sequence of numbers from 1 to 10 contained in `lin_1`.
+2.  the correlation coefficient computed will now have more troubles recognizing this [non-linear relationship](https://en.wikipedia.org/wiki/Quadratic_equation) and produce a lower correlation coefficient (in absolute value).
+
 # Inferential statistics
 
-Inferential statistics refers to how we can make inferences about a population starting from a [representative sample](https://www.investopedia.com/terms/r/representative-sample.asp#:~:text=A%20representative%20sample%20is%20a,three%20males%20and%20three%20females.) drawn from it.
+Inferential statistics refers to how we can make [inferences](https://www.merriam-webster.com/dictionary/inference) about a population starting from a [representative sample](https://www.investopedia.com/terms/r/representative-sample.asp#:~:text=A%20representative%20sample%20is%20a,three%20males%20and%20three%20females.) drawn from it.
 
 ## Probability Distributions
 

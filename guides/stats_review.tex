@@ -448,7 +448,7 @@ var_skewed
 
 Instead, for the case above, the mode is unique and is the value 1.
 
-\begin{tcolorbox}[enhanced jigsaw, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, colframe=quarto-callout-note-color-frame, colback=white, titlerule=0mm, bottomtitle=1mm, left=2mm, bottomrule=.15mm, rightrule=.15mm, toprule=.15mm, coltitle=black, breakable, toptitle=1mm, leftrule=.75mm, arc=.35mm, opacitybacktitle=0.6, opacityback=0, colbacktitle=quarto-callout-note-color!10!white]
+\begin{tcolorbox}[enhanced jigsaw, bottomrule=.15mm, colframe=quarto-callout-note-color-frame, arc=.35mm, leftrule=.75mm, toptitle=1mm, toprule=.15mm, titlerule=0mm, breakable, opacityback=0, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, bottomtitle=1mm, colback=white, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, left=2mm, rightrule=.15mm, opacitybacktitle=0.6]
 
 As a side note, consider the following variable \(X\) which can take
 values 1,2,3,4,5. Since each value appears with the same frequency
@@ -480,7 +480,7 @@ values of a variable are from their mean. Since we want an average
 value, we divide the \emph{squared sum of all the deviations} by the
 sample size \(N\).
 
-\begin{tcolorbox}[enhanced jigsaw, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, colframe=quarto-callout-note-color-frame, colback=white, titlerule=0mm, bottomtitle=1mm, left=2mm, bottomrule=.15mm, rightrule=.15mm, toprule=.15mm, coltitle=black, breakable, toptitle=1mm, leftrule=.75mm, arc=.35mm, opacitybacktitle=0.6, opacityback=0, colbacktitle=quarto-callout-note-color!10!white]
+\begin{tcolorbox}[enhanced jigsaw, bottomrule=.15mm, colframe=quarto-callout-note-color-frame, arc=.35mm, leftrule=.75mm, toptitle=1mm, toprule=.15mm, titlerule=0mm, breakable, opacityback=0, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, bottomtitle=1mm, colback=white, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, left=2mm, rightrule=.15mm, opacitybacktitle=0.6]
 
 \(\mu\) is referred to as the
 \href{https://www.wallstreetmojo.com/sample-mean-vs-population-mean/}{population
@@ -532,7 +532,7 @@ moving on! (Don't get confused by the
 \href{https://calculator.name/scientific-notation-to-decimal/1.25e13}{scientific
 notation} employed here by R to show the output)
 
-\begin{tcolorbox}[enhanced jigsaw, title=\textcolor{quarto-callout-caution-color}{\faFire}\hspace{0.5em}{Caution}, colframe=quarto-callout-caution-color-frame, colback=white, titlerule=0mm, bottomtitle=1mm, left=2mm, bottomrule=.15mm, rightrule=.15mm, toprule=.15mm, coltitle=black, breakable, toptitle=1mm, leftrule=.75mm, arc=.35mm, opacitybacktitle=0.6, opacityback=0, colbacktitle=quarto-callout-caution-color!10!white]
+\begin{tcolorbox}[enhanced jigsaw, bottomrule=.15mm, colframe=quarto-callout-caution-color-frame, arc=.35mm, leftrule=.75mm, toptitle=1mm, toprule=.15mm, titlerule=0mm, breakable, opacityback=0, colbacktitle=quarto-callout-caution-color!10!white, coltitle=black, bottomtitle=1mm, colback=white, title=\textcolor{quarto-callout-caution-color}{\faFire}\hspace{0.5em}{Caution}, left=2mm, rightrule=.15mm, opacitybacktitle=0.6]
 
 When computing the variance of a variable you have to keep in mind that
 the resulting variance will be denominated by the square of the original
@@ -592,10 +592,143 @@ find useful:
   range}
 \end{enumerate}
 
+\subsubsection{The Two Variables Case}\label{the-two-variables-case}
+
+Sometimes, we are not interested only in describing the behavior of a
+single variable but we might want to study how it interacts with another
+variable. Quantifying this relationship is very easy thanks to some
+tools such as the \textbf{covariance} of two variables and the
+\textbf{correlation coefficient}.
+
+\paragraph{Covariance}\label{covariance}
+
+Covariance refers to how much two variables co-vary (i.e., vary
+together). It is useful to look at the formula of how it is computed to
+derive some intuition about how it works.
+
+\[
+\text{Cov}(X, Y) = \frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})(y_i - \bar{y})
+\]
+
+In other words, the covariance of two variables \(X\) and \(Y\) is
+determined by how many times they are both above (or below) their
+respective means, \(\bar{x}\) and \(\bar{y}\). Intuitively, if they are
+both above (or below) their mean we would be multiplying together two
+numbers with the same sign, and the result will be a positive number.
+Then, following simple reasoning, if we add together many positive
+numbers we get a number that is larger than if we were to add an equal
+number of some negative and some positive numbers together (assuming
+they are the same in absolute value). It follows that two variables that
+are more often than not above their means, at the same time, will have a
+higher covariance, meaning that these variables will be growing (or
+shrinking) together.
+
+The opposite of this is the case when two variables have a covariance
+that is close to 0, which is the same as saying that the two variables
+are independent (i.e., knowing that one of the variables changes tells
+me nothing about how the other behaves).
+
+\begin{tcolorbox}[enhanced jigsaw, bottomrule=.15mm, colframe=quarto-callout-caution-color-frame, arc=.35mm, leftrule=.75mm, toptitle=1mm, toprule=.15mm, titlerule=0mm, breakable, opacityback=0, colbacktitle=quarto-callout-caution-color!10!white, coltitle=black, bottomtitle=1mm, colback=white, title=\textcolor{quarto-callout-caution-color}{\faFire}\hspace{0.5em}{Caution}, left=2mm, rightrule=.15mm, opacitybacktitle=0.6]
+
+Covariance has the same issue that variance has: squared units of
+measure. We learn how to deal with this next.
+
+\end{tcolorbox}
+
+\paragraph{Correlation coefficient}\label{correlation-coefficient}
+
+In a similar way to how the standard deviation solves the issue of
+squared units of measures for the variance, so does the correlation
+coefficient for the covariance. Here is its formula:
+
+\[
+r = \frac{\operatorname{Cov}(X, Y)}{\sigma_X \sigma_Y}
+\]
+
+From here, we notice some important properties of \(r\):
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  It is scaled by the product of the standard deviation of the two
+  variables, and therefore \(r\) now always falls in the range
+  {[}-1,1{]}. This allows us to have boundaries to interpret the
+  strength of the relationship between \(X\) and \(Y\).
+\item
+  The closer \(|r|\) is to 1 (in
+  \href{https://en.wikipedia.org/wiki/Absolute_value}{absolute value})
+  the stronger the relationship between the two variables.
+\item
+  The sign of \(r\) is determined solely by the sign of the
+  \(\operatorname{Cov}(X, Y)\) at the numerator since the standard
+  deviations at the bottom are always positive values.
+\end{enumerate}
+
+\begin{tcolorbox}[enhanced jigsaw, bottomrule=.15mm, colframe=quarto-callout-important-color-frame, arc=.35mm, leftrule=.75mm, toptitle=1mm, toprule=.15mm, titlerule=0mm, breakable, opacityback=0, colbacktitle=quarto-callout-important-color!10!white, coltitle=black, bottomtitle=1mm, colback=white, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, left=2mm, rightrule=.15mm, opacitybacktitle=0.6]
+
+Notice that \(r\) measures the strength of \emph{linear correlation}
+between two variables. This means that if \(X\) and \(Y\) are linked by
+a non-linear relationship, \(r\) will not be able to detect it! We show
+this with an example.
+
+\end{tcolorbox}
+
+\phantomsection\label{annotated-cell-15}%
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lin\_1 }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\DecValTok{1}\NormalTok{,}\DecValTok{10}\NormalTok{) }\hspace*{\fill}\NormalTok{\circled{1}}
+\NormalTok{lin\_2 }\OtherTok{\textless{}{-}} \FunctionTok{seq}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{,}\SpecialCharTok{{-}}\DecValTok{10}\NormalTok{) }\hspace*{\fill}\NormalTok{\circled{2}}
+
+\FunctionTok{cor}\NormalTok{(lin\_1, lin\_2) }\hspace*{\fill}\NormalTok{\circled{3}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{description}
+\tightlist
+\item[\circled{1}]
+generate sequence of numbers from 1 to 10
+\item[\circled{2}]
+generate sequence of numbers from -1 to -10
+\item[\circled{3}]
+compute the \texttt{cor}relation between these two linear sequences
+\end{description}
+
+\begin{verbatim}
+[1] -1
+\end{verbatim}
+
+\phantomsection\label{annotated-cell-16}%
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{sq\_2 }\OtherTok{\textless{}{-}}\NormalTok{ lin\_1}\SpecialCharTok{\^{}}\DecValTok{2} \hspace*{\fill}\NormalTok{\circled{1}}
+
+\FunctionTok{cor}\NormalTok{(lin\_1, sq\_2) }\hspace*{\fill}\NormalTok{\circled{2}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{description}
+\tightlist
+\item[\circled{1}]
+\texttt{sq\_2} is the square of the sequence of numbers from 1 to 10
+contained in \texttt{lin\_1}.
+\item[\circled{2}]
+the correlation coefficient computed will now have more troubles
+recognizing this
+\href{https://en.wikipedia.org/wiki/Quadratic_equation}{non-linear
+relationship} and produce a lower correlation coefficient (in absolute
+value).
+\end{description}
+
+\begin{verbatim}
+[1] 0.9745586
+\end{verbatim}
+
 \section{Inferential statistics}\label{inferential-statistics}
 
-Inferential statistics refers to how we can make inferences about a
-population starting from a
+Inferential statistics refers to how we can make
+\href{https://www.merriam-webster.com/dictionary/inference}{inferences}
+about a population starting from a
 \href{https://www.investopedia.com/terms/r/representative-sample.asp\#:~:text=A\%20representative\%20sample\%20is\%20a,three\%20males\%20and\%20three\%20females.}{representative
 sample} drawn from it.
 
@@ -646,7 +779,7 @@ distribution}. Plotting the distribution we observe that rolling the die
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{stats_review_files/figure-pdf/unnamed-chunk-15-1.pdf}
+\includegraphics{stats_review_files/figure-pdf/unnamed-chunk-17-1.pdf}
 
 In this case 19\% of all rolls (meaning 19 rolls) produced had as an
 outcome a 2. We could have computed this probability before conducting
@@ -699,7 +832,7 @@ Let's plot it out
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{stats_review_files/figure-pdf/unnamed-chunk-16-1.pdf}
+\includegraphics{stats_review_files/figure-pdf/unnamed-chunk-18-1.pdf}
 
 there is also a special case of the normal distribution which occur when
 \(\mu=0\) and \(\sigma^2=1\). This is called the
@@ -786,7 +919,7 @@ concepts of p-value and significance level just discussed, the following
 method is used to determine whether one should reject or do not reject
 the null hypothesis:
 
-\begin{tcolorbox}[enhanced jigsaw, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, colframe=quarto-callout-important-color-frame, colback=white, titlerule=0mm, bottomtitle=1mm, left=2mm, bottomrule=.15mm, rightrule=.15mm, toprule=.15mm, coltitle=black, breakable, toptitle=1mm, leftrule=.75mm, arc=.35mm, opacitybacktitle=0.6, opacityback=0, colbacktitle=quarto-callout-important-color!10!white]
+\begin{tcolorbox}[enhanced jigsaw, bottomrule=.15mm, colframe=quarto-callout-important-color-frame, arc=.35mm, leftrule=.75mm, toptitle=1mm, toprule=.15mm, titlerule=0mm, breakable, opacityback=0, colbacktitle=quarto-callout-important-color!10!white, coltitle=black, bottomtitle=1mm, colback=white, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, left=2mm, rightrule=.15mm, opacitybacktitle=0.6]
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -804,7 +937,7 @@ To go back to our original height problem and to determine whether group
 the t-statistic. The t-statistic comes from the T distribution and it is
 used to quantify by how much two sample means differ from each other.
 
-\phantomsection\label{annotated-cell-17}%
+\phantomsection\label{annotated-cell-19}%
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{set.seed}\NormalTok{(}\DecValTok{128}\NormalTok{) }\hspace*{\fill}\NormalTok{\circled{1}}
@@ -842,7 +975,7 @@ Let's plot the distribution of the height of the two samples.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{stats_review_files/figure-pdf/unnamed-chunk-18-1.pdf}
+\includegraphics{stats_review_files/figure-pdf/unnamed-chunk-20-1.pdf}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -851,7 +984,7 @@ Let's plot the distribution of the height of the two samples.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{stats_review_files/figure-pdf/unnamed-chunk-19-1.pdf}
+\includegraphics{stats_review_files/figure-pdf/unnamed-chunk-21-1.pdf}
 
 Finally, we conduct a t test to determine whether there is a significant
 difference in means between the two samples.
@@ -893,7 +1026,7 @@ height distributions that we ended up observing in the two groups. For
 this reason, \(H_0\) does not seem to reflect well what we observed in
 our experiment and therefore is rejected.
 
-\begin{tcolorbox}[enhanced jigsaw, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, colframe=quarto-callout-important-color-frame, colback=white, titlerule=0mm, bottomtitle=1mm, left=2mm, bottomrule=.15mm, rightrule=.15mm, toprule=.15mm, coltitle=black, breakable, toptitle=1mm, leftrule=.75mm, arc=.35mm, opacitybacktitle=0.6, opacityback=0, colbacktitle=quarto-callout-important-color!10!white]
+\begin{tcolorbox}[enhanced jigsaw, bottomrule=.15mm, colframe=quarto-callout-important-color-frame, arc=.35mm, leftrule=.75mm, toptitle=1mm, toprule=.15mm, titlerule=0mm, breakable, opacityback=0, colbacktitle=quarto-callout-important-color!10!white, coltitle=black, bottomtitle=1mm, colback=white, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, left=2mm, rightrule=.15mm, opacitybacktitle=0.6]
 
 Tests of hypotheses are everywhere in inferential statistics, so be sure
 to have familiarized with what discussed in this section.
@@ -924,7 +1057,7 @@ variable \(X\) takes value \(X_i\) and it is multiplied by the estimated
 slope parameter \(\hat\beta_1\) and added to the estimated intercept
 parameter \(\hat\beta_0\). We now have a look at it in code.
 
-\phantomsection\label{annotated-cell-22}%
+\phantomsection\label{annotated-cell-24}%
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(MASS) }\hspace*{\fill}\NormalTok{\circled{1}}
@@ -973,7 +1106,7 @@ Mole                 0.122    3.0
 Pig                192.000  180.0
 \end{verbatim}
 
-\phantomsection\label{annotated-cell-23}%
+\phantomsection\label{annotated-cell-25}%
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{regression }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(brain}\SpecialCharTok{\textasciitilde{}}\NormalTok{body, animals) }\hspace*{\fill}\NormalTok{\circled{1}}
@@ -1044,7 +1177,7 @@ is also greater than \(\alpha\) = .1.
 If you wanted to plot out the line obtained by the above linear model,
 you can use this code to visualize it
 
-\phantomsection\label{annotated-cell-24}%
+\phantomsection\label{annotated-cell-26}%
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(ggplot2)}
@@ -1068,7 +1201,7 @@ adds the estimated regression line
 `geom_smooth()` using formula = 'y ~ x'
 \end{verbatim}
 
-\includegraphics{stats_review_files/figure-pdf/unnamed-chunk-24-1.pdf}
+\includegraphics{stats_review_files/figure-pdf/unnamed-chunk-26-1.pdf}
 
 Now that we plotted the data, however, we can clearly see that there is
 an observation that is far to the right and is skewing the distribution
