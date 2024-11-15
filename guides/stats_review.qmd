@@ -70,7 +70,7 @@ abline(v = mean(var), col="red", lwd=3) #<2>
 2.  adding a vertical (`v`) line where the mean of the variable is located
 
 ```{r}
-hist(var_skewed, breaks = 30)
+hist(var_skewed, breaks = 30, main = "Skewed")
 abline(v = mean(var_skewed), col="red", lwd=3)
 ```
 
@@ -94,7 +94,7 @@ abline(v = median(var), col="red", lwd=3)
 ```
 
 ```{r}
-hist(var_skewed, breaks = 30)
+hist(var_skewed, breaks = 30, main = "Skewed")
 abline(v = median(var_skewed), col="red", lwd=3)
 ```
 
@@ -130,7 +130,7 @@ The [variance](https://www.investopedia.com/terms/v/variance.asp) of a variable 
 
 $$
 \sigma^2 = \frac{1}{N} \sum_{i=1}^N (x_i - \mu)^2
-$$
+$$ {#eq-pop-variance}
 
 The term $(x_i - \mu)$ is often referred to as *deviation from the mean*. When we add all those up (notice the $_i$ to the bottom right of the $x$) and we square them we have a measure of how far values of a variable are from their mean. Since we want an average value, we divide the *squared sum of all the deviations* by the sample size $N$.
 
@@ -146,13 +146,13 @@ Variables with higher variance have values that are further away from their mean
 var(var) #<1>
 ```
 
-1.  here the outside `var` refers to the variance function while the *var* inside the parenthesis is the argument to the function, which in this case is our variable!
+1.  here the outside `var` refers to the variance function while the *var* inside the parenthesis is the argument to the function, which in this case is our *var*iable!
 
 ```{r}
 var(var_skewed) #result is 12500000000000
 ```
 
-Think about the two results above and make sure they make sense before moving on! (Don't get confused by the [scientific notation](https://calculator.name/scientific-notation-to-decimal/1.25e13) employed here by R to show the output)
+Think about the two results above and make sure they make sense before moving on! (Don't get confused by the [scientific notation](https://calculator.name/scientific-notation-to-decimal/1.25e13) employed here by R in the output)
 
 ::: callout-caution
 When computing the variance of a variable you have to keep in mind that the resulting variance will be denominated by the square of the original unit of measure.
@@ -160,6 +160,18 @@ When computing the variance of a variable you have to keep in mind that the resu
 For example, if my variable $R$ representing the return on a stock is denominated in $USD$ its variance ($Var[R]$) will be denominated in $USD^2$. This makes the results less interpretable because in real life there is no such thing as squared dollars!
 
 Next we learn how to address this problem.
+:::
+
+::: callout-note
+The formula for the variance introduced in @eq-pop-variance is commonly referred to as the *population variance* of $X$. Note that there is a difference between this quantity and the sample variance which is computed as follows:
+
+$$
+s^2 = \frac{1}{n-1} \sum_{i=1}^n (x_i - \bar{x})^2
+$$
+
+Notice the use of the $s$ to represent a [sample statistic](https://www.sciencedirect.com/topics/mathematics/sample-statistic). Sample statistics are usually denoted by Latin alphabet letters as opposed to population statistics denoted by letters from the Greek alphabet.
+
+Also, we are dividing by $n-1$ due to the fact that we have one less degree of freedom which has been used to compute the sample mean $\bar{x}$ as we use it to estimate the unknown population mean $\mu$.
 :::
 
 ### Standard deviation
@@ -211,7 +223,7 @@ $$
 
 From here, we notice some important properties of $r$:
 
-1.  It is scaled by the product of the standard deviation of the two variables, and therefore $r$ now always falls in the range \[-1,1\]. This allows us to have boundaries to interpret the strength of the relationship between $X$ and $Y$.
+1.  It is scaled (i.e., divided) by the product of the standard deviation of the two variables, and therefore $r$ now always falls in the range \[-1,1\]. This allows us to have boundaries to interpret the strength of the relationship between $X$ and $Y$.
 2.  The closer $|r|$ is to 1 (in [absolute value](https://en.wikipedia.org/wiki/Absolute_value)) the stronger the relationship between the two variables.
 3.  The sign of $r$ is determined solely by the sign of the $\operatorname{Cov}(X, Y)$ at the numerator since the standard deviations at the bottom are always positive values.
 
@@ -293,7 +305,7 @@ $$
 
 ### Student's T distribution
 
-Another useful distribution is the [T distribution](https://en.wikipedia.org/wiki/Student%27s_t-distribution). Shape-wise the T distribution has the same nice properties of the standard normal distribution (of which it is a generalization). However, it is common to use this distribution when we do not know the true population parameters (i.e., $\mu$ and $\sigma^2$) and we have to use their sample counterpart as parameters. The T distribution comes with [degrees of freedom](https://www.scribbr.com/statistics/degrees-of-freedom/#:~:text=Degrees%20of%20freedom%2C%20often%20represented,minus%20the%20number%20of%20restrictions.) which are used to assess how many data points are left free to vary after having estimated the population parameters that we need from the sample.
+Another useful distribution is the [T distribution](https://en.wikipedia.org/wiki/Student%27s_t-distribution). Shape-wise the T distribution has the same nice properties of the standard normal distribution (of which it is a generalization). However, it is common to use this distribution when we do not know the true population value of $\sigma^2$ and we have to use its sample counterpart $s^{2}$ as its estimate. The T distribution comes with [degrees of freedom](https://www.scribbr.com/statistics/degrees-of-freedom/#:~:text=Degrees%20of%20freedom%2C%20often%20represented,minus%20the%20number%20of%20restrictions.) which are used to assess how many data points are left free to vary after having estimated the population parameters that we need from the sample. In this case, note that since we are using $s^{2}$ to estimate $\sigma^{2}$ we lose one degree of freedom and our T distribution will be defined by $n-1$ degrees of freedom.
 
 ## Tests of hypotheses {#sec-testhyp}
 

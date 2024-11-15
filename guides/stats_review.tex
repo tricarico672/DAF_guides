@@ -44,14 +44,28 @@
 \setlength{\emergencystretch}{3em} % prevent overfull lines
 \setcounter{secnumdepth}{5}
 % Make \paragraph and \subparagraph free-standing
+\makeatletter
 \ifx\paragraph\undefined\else
   \let\oldparagraph\paragraph
-  \renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+  \renewcommand{\paragraph}{
+    \@ifstar
+      \xxxParagraphStar
+      \xxxParagraphNoStar
+  }
+  \newcommand{\xxxParagraphStar}[1]{\oldparagraph*{#1}\mbox{}}
+  \newcommand{\xxxParagraphNoStar}[1]{\oldparagraph{#1}\mbox{}}
 \fi
 \ifx\subparagraph\undefined\else
   \let\oldsubparagraph\subparagraph
-  \renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+  \renewcommand{\subparagraph}{
+    \@ifstar
+      \xxxSubParagraphStar
+      \xxxSubParagraphNoStar
+  }
+  \newcommand{\xxxSubParagraphStar}[1]{\oldsubparagraph*{#1}\mbox{}}
+  \newcommand{\xxxSubParagraphNoStar}[1]{\oldsubparagraph{#1}\mbox{}}
 \fi
+\makeatother
 
 \usepackage{color}
 \usepackage{fancyvrb}
@@ -71,7 +85,7 @@
 \newcommand{\CommentTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
 \newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{\textit{#1}}}
 \newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
-\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{\textbf{#1}}}
 \newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
 \newcommand{\DecValTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
 \newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{\textit{#1}}}
@@ -81,7 +95,7 @@
 \newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.28,0.35,0.67}{#1}}
 \newcommand{\ImportTok}[1]{\textcolor[rgb]{0.00,0.46,0.62}{#1}}
 \newcommand{\InformationTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
-\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{\textbf{#1}}}
 \newcommand{\NormalTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
 \newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
 \newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
@@ -183,6 +197,7 @@
         \newcommand*\circled[1]{\tikz[baseline=(char.base)]{
           \node[shape=circle,draw,inner sep=1pt] (char) {{\scriptsize#1}};}}  
                   
+
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
@@ -200,6 +215,7 @@
   urlcolor={Blue},
   pdfcreator={LaTeX via pandoc}}
 
+
 \title{Statistics Review}
 \author{Anthony Tricarico}
 \date{}
@@ -213,6 +229,7 @@
 \setcounter{tocdepth}{3}
 \tableofcontents
 }
+
 \section{Intro}\label{intro}
 
 This document is a collection of useful statistical concepts that will
@@ -340,7 +357,7 @@ located
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{hist}\NormalTok{(var\_skewed, }\AttributeTok{breaks =} \DecValTok{30}\NormalTok{)}
+\FunctionTok{hist}\NormalTok{(var\_skewed, }\AttributeTok{breaks =} \DecValTok{30}\NormalTok{, }\AttributeTok{main =} \StringTok{"Skewed"}\NormalTok{)}
 \FunctionTok{abline}\NormalTok{(}\AttributeTok{v =} \FunctionTok{mean}\NormalTok{(var\_skewed), }\AttributeTok{col=}\StringTok{"red"}\NormalTok{, }\AttributeTok{lwd=}\DecValTok{3}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
@@ -395,7 +412,7 @@ of our data.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{hist}\NormalTok{(var\_skewed, }\AttributeTok{breaks =} \DecValTok{30}\NormalTok{)}
+\FunctionTok{hist}\NormalTok{(var\_skewed, }\AttributeTok{breaks =} \DecValTok{30}\NormalTok{, }\AttributeTok{main =} \StringTok{"Skewed"}\NormalTok{)}
 \FunctionTok{abline}\NormalTok{(}\AttributeTok{v =} \FunctionTok{median}\NormalTok{(var\_skewed), }\AttributeTok{col=}\StringTok{"red"}\NormalTok{, }\AttributeTok{lwd=}\DecValTok{3}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
@@ -448,7 +465,7 @@ var_skewed
 
 Instead, for the case above, the mode is unique and is the value 1.
 
-\begin{tcolorbox}[enhanced jigsaw, bottomrule=.15mm, colframe=quarto-callout-note-color-frame, arc=.35mm, leftrule=.75mm, toptitle=1mm, toprule=.15mm, titlerule=0mm, breakable, opacityback=0, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, bottomtitle=1mm, colback=white, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, left=2mm, rightrule=.15mm, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, leftrule=.75mm, colback=white, colframe=quarto-callout-note-color-frame, rightrule=.15mm, opacitybacktitle=0.6, titlerule=0mm, arc=.35mm, toptitle=1mm, opacityback=0, bottomtitle=1mm, left=2mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomrule=.15mm, breakable, toprule=.15mm]
 
 As a side note, consider the following variable \(X\) which can take
 values 1,2,3,4,5. Since each value appears with the same frequency
@@ -469,9 +486,9 @@ statistical application.
 The \href{https://www.investopedia.com/terms/v/variance.asp}{variance}
 of a variable measures the spread between its values and its mean.
 
-\[
+\begin{equation}\phantomsection\label{eq-pop-variance}{
 \sigma^2 = \frac{1}{N} \sum_{i=1}^N (x_i - \mu)^2
-\]
+}\end{equation}
 
 The term \((x_i - \mu)\) is often referred to as \emph{deviation from
 the mean}. When we add all those up (notice the \(_i\) to the bottom
@@ -480,7 +497,7 @@ values of a variable are from their mean. Since we want an average
 value, we divide the \emph{squared sum of all the deviations} by the
 sample size \(N\).
 
-\begin{tcolorbox}[enhanced jigsaw, bottomrule=.15mm, colframe=quarto-callout-note-color-frame, arc=.35mm, leftrule=.75mm, toptitle=1mm, toprule=.15mm, titlerule=0mm, breakable, opacityback=0, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, bottomtitle=1mm, colback=white, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, left=2mm, rightrule=.15mm, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, leftrule=.75mm, colback=white, colframe=quarto-callout-note-color-frame, rightrule=.15mm, opacitybacktitle=0.6, titlerule=0mm, arc=.35mm, toptitle=1mm, opacityback=0, bottomtitle=1mm, left=2mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomrule=.15mm, breakable, toprule=.15mm]
 
 \(\mu\) is referred to as the
 \href{https://www.wallstreetmojo.com/sample-mean-vs-population-mean/}{population
@@ -510,7 +527,7 @@ passed as argument in the function.
 \item[\circled{1}]
 here the outside \texttt{var} refers to the variance function while the
 \emph{var} inside the parenthesis is the argument to the function, which
-in this case is our variable!
+in this case is our \emph{var}iable!
 \end{description}
 
 \begin{verbatim}
@@ -530,9 +547,9 @@ in this case is our variable!
 Think about the two results above and make sure they make sense before
 moving on! (Don't get confused by the
 \href{https://calculator.name/scientific-notation-to-decimal/1.25e13}{scientific
-notation} employed here by R to show the output)
+notation} employed here by R in the output)
 
-\begin{tcolorbox}[enhanced jigsaw, bottomrule=.15mm, colframe=quarto-callout-caution-color-frame, arc=.35mm, leftrule=.75mm, toptitle=1mm, toprule=.15mm, titlerule=0mm, breakable, opacityback=0, colbacktitle=quarto-callout-caution-color!10!white, coltitle=black, bottomtitle=1mm, colback=white, title=\textcolor{quarto-callout-caution-color}{\faFire}\hspace{0.5em}{Caution}, left=2mm, rightrule=.15mm, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-caution-color!10!white, coltitle=black, leftrule=.75mm, colback=white, colframe=quarto-callout-caution-color-frame, rightrule=.15mm, opacitybacktitle=0.6, titlerule=0mm, arc=.35mm, toptitle=1mm, opacityback=0, bottomtitle=1mm, left=2mm, title=\textcolor{quarto-callout-caution-color}{\faFire}\hspace{0.5em}{Caution}, bottomrule=.15mm, breakable, toprule=.15mm]
 
 When computing the variance of a variable you have to keep in mind that
 the resulting variance will be denominated by the square of the original
@@ -544,6 +561,31 @@ denominated in \(USD\) its variance (\(Var[R]\)) will be denominated in
 life there is no such thing as squared dollars!
 
 Next we learn how to address this problem.
+
+\end{tcolorbox}
+
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, coltitle=black, leftrule=.75mm, colback=white, colframe=quarto-callout-note-color-frame, rightrule=.15mm, opacitybacktitle=0.6, titlerule=0mm, arc=.35mm, toptitle=1mm, opacityback=0, bottomtitle=1mm, left=2mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, bottomrule=.15mm, breakable, toprule=.15mm]
+
+The formula for the variance introduced in
+Equation~\ref{eq-pop-variance} is commonly referred to as the
+\emph{population variance} of \(X\). Note that there is a difference
+between this quantity and the sample variance which is computed as
+follows:
+
+\[
+s^2 = \frac{1}{n-1} \sum_{i=1}^n (x_i - \bar{x})^2
+\]
+
+Notice the use of the \(s\) to represent a
+\href{https://www.sciencedirect.com/topics/mathematics/sample-statistic}{sample
+statistic}. Sample statistics are usually denoted by Latin alphabet
+letters as opposed to population statistics denoted by letters from the
+Greek alphabet.
+
+Also, we are dividing by \(n-1\) due to the fact that we have one less
+degree of freedom which has been used to compute the sample mean
+\(\bar{x}\) as we use it to estimate the unknown population mean
+\(\mu\).
 
 \end{tcolorbox}
 
@@ -628,7 +670,7 @@ that is close to 0, which is the same as saying that the two variables
 are independent (i.e., knowing that one of the variables changes tells
 me nothing about how the other behaves).
 
-\begin{tcolorbox}[enhanced jigsaw, bottomrule=.15mm, colframe=quarto-callout-caution-color-frame, arc=.35mm, leftrule=.75mm, toptitle=1mm, toprule=.15mm, titlerule=0mm, breakable, opacityback=0, colbacktitle=quarto-callout-caution-color!10!white, coltitle=black, bottomtitle=1mm, colback=white, title=\textcolor{quarto-callout-caution-color}{\faFire}\hspace{0.5em}{Caution}, left=2mm, rightrule=.15mm, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-caution-color!10!white, coltitle=black, leftrule=.75mm, colback=white, colframe=quarto-callout-caution-color-frame, rightrule=.15mm, opacitybacktitle=0.6, titlerule=0mm, arc=.35mm, toptitle=1mm, opacityback=0, bottomtitle=1mm, left=2mm, title=\textcolor{quarto-callout-caution-color}{\faFire}\hspace{0.5em}{Caution}, bottomrule=.15mm, breakable, toprule=.15mm]
 
 Covariance has the same issue that variance has: squared units of
 measure. We learn how to deal with this next.
@@ -651,9 +693,9 @@ From here, we notice some important properties of \(r\):
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  It is scaled by the product of the standard deviation of the two
-  variables, and therefore \(r\) now always falls in the range
-  {[}-1,1{]}. This allows us to have boundaries to interpret the
+  It is scaled (i.e., divided) by the product of the standard deviation
+  of the two variables, and therefore \(r\) now always falls in the
+  range {[}-1,1{]}. This allows us to have boundaries to interpret the
   strength of the relationship between \(X\) and \(Y\).
 \item
   The closer \(|r|\) is to 1 (in
@@ -665,7 +707,7 @@ From here, we notice some important properties of \(r\):
   deviations at the bottom are always positive values.
 \end{enumerate}
 
-\begin{tcolorbox}[enhanced jigsaw, bottomrule=.15mm, colframe=quarto-callout-important-color-frame, arc=.35mm, leftrule=.75mm, toptitle=1mm, toprule=.15mm, titlerule=0mm, breakable, opacityback=0, colbacktitle=quarto-callout-important-color!10!white, coltitle=black, bottomtitle=1mm, colback=white, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, left=2mm, rightrule=.15mm, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-important-color!10!white, coltitle=black, leftrule=.75mm, colback=white, colframe=quarto-callout-important-color-frame, rightrule=.15mm, opacitybacktitle=0.6, titlerule=0mm, arc=.35mm, toptitle=1mm, opacityback=0, bottomtitle=1mm, left=2mm, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, bottomrule=.15mm, breakable, toprule=.15mm]
 
 Notice that \(r\) measures the strength of \emph{linear correlation}
 between two variables. This means that if \(X\) and \(Y\) are linked by
@@ -855,13 +897,15 @@ Another useful distribution is the
 distribution}. Shape-wise the T distribution has the same nice
 properties of the standard normal distribution (of which it is a
 generalization). However, it is common to use this distribution when we
-do not know the true population parameters (i.e., \(\mu\) and
-\(\sigma^2\)) and we have to use their sample counterpart as parameters.
-The T distribution comes with
+do not know the true population value of \(\sigma^2\) and we have to use
+its sample counterpart \(s^{2}\) as its estimate. The T distribution
+comes with
 \href{https://www.scribbr.com/statistics/degrees-of-freedom/\#:~:text=Degrees\%20of\%20freedom\%2C\%20often\%20represented,minus\%20the\%20number\%20of\%20restrictions.}{degrees
 of freedom} which are used to assess how many data points are left free
 to vary after having estimated the population parameters that we need
-from the sample.
+from the sample. In this case, note that since we are using \(s^{2}\) to
+estimate \(\sigma^{2}\) we lose one degree of freedom and our T
+distribution will be defined by \(n-1\) degrees of freedom.
 
 \subsection{Tests of hypotheses}\label{sec-testhyp}
 
@@ -919,7 +963,7 @@ concepts of p-value and significance level just discussed, the following
 method is used to determine whether one should reject or do not reject
 the null hypothesis:
 
-\begin{tcolorbox}[enhanced jigsaw, bottomrule=.15mm, colframe=quarto-callout-important-color-frame, arc=.35mm, leftrule=.75mm, toptitle=1mm, toprule=.15mm, titlerule=0mm, breakable, opacityback=0, colbacktitle=quarto-callout-important-color!10!white, coltitle=black, bottomtitle=1mm, colback=white, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, left=2mm, rightrule=.15mm, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-important-color!10!white, coltitle=black, leftrule=.75mm, colback=white, colframe=quarto-callout-important-color-frame, rightrule=.15mm, opacitybacktitle=0.6, titlerule=0mm, arc=.35mm, toptitle=1mm, opacityback=0, bottomtitle=1mm, left=2mm, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, bottomrule=.15mm, breakable, toprule=.15mm]
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -1026,7 +1070,7 @@ height distributions that we ended up observing in the two groups. For
 this reason, \(H_0\) does not seem to reflect well what we observed in
 our experiment and therefore is rejected.
 
-\begin{tcolorbox}[enhanced jigsaw, bottomrule=.15mm, colframe=quarto-callout-important-color-frame, arc=.35mm, leftrule=.75mm, toptitle=1mm, toprule=.15mm, titlerule=0mm, breakable, opacityback=0, colbacktitle=quarto-callout-important-color!10!white, coltitle=black, bottomtitle=1mm, colback=white, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, left=2mm, rightrule=.15mm, opacitybacktitle=0.6]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-important-color!10!white, coltitle=black, leftrule=.75mm, colback=white, colframe=quarto-callout-important-color-frame, rightrule=.15mm, opacitybacktitle=0.6, titlerule=0mm, arc=.35mm, toptitle=1mm, opacityback=0, bottomtitle=1mm, left=2mm, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, bottomrule=.15mm, breakable, toprule=.15mm]
 
 Tests of hypotheses are everywhere in inferential statistics, so be sure
 to have familiarized with what discussed in this section.
@@ -1225,6 +1269,7 @@ to make sense of this topic:
   \href{https://youtube.com/playlist?list=PLblh5JKOoLUIzaEkCLIUxQFjPIlapw8nU&si=ldwNn7dwyE6ts7Q-}{YT
   Playlist on regression}
 \end{enumerate}
+
 
 
 
