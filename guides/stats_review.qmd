@@ -3,6 +3,7 @@ title: "Statistics Review"
 author: "Anthony Tricarico"
 link-citations: true
 number-sections: true
+
 format:  
   pdf:
     toc: true                 # Adds a TOC for PDF as well
@@ -10,7 +11,7 @@ format:
     margin-left: 2cm          # Left margin for better readability
     margin-right: 2cm         # Right margin for better readability
     keep-tex: true            # Keeps the intermediate .tex file for debugging/adjustments
-
+    fig-align: center
 
 # Aesthetic options for code rendering
 code-block-style: github      # Styles code blocks similar to GitHub's appearance
@@ -19,6 +20,11 @@ code-overflow: wrap           # Ensures code stays within margins
 page-layout: article          # Article layout keeps focus on content
 editor: visual
 ---
+
+```{r setup, include = F}
+# Global options for R code chunks
+knitr::opts_chunk$set(fig.align = "center")
+```
 
 # Intro
 
