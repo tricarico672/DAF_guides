@@ -111,13 +111,14 @@ grid.arrange(p231,p232,p233,p234,nrow=2)
 
 # Figure 2.4
 
-gg_season(a10, Cost, labels = "both") + labs(y = "$ (millions)", 
-        title = "Seasonal plot: Antidiabetic drug sales") 
+gg_season(a10, Cost, labels = "both") + 
+  labs(y = "$ (millions)", 
+       title = "Seasonal plot: Antidiabetic drug sales")
 
 # Figure 2.5
 
-gg_season(vic_elec, Demand, period = "day") + 
-  theme(legend.position = "none") +
+gg_season(vic_elec, Demand, "day") + 
+  theme(legend.position = "best") +
   labs(y="MW", title="Electricity demand: Victoria")
 
 # Figure 2.6
@@ -131,12 +132,19 @@ gg_season(vic_elec, Demand, period = "week") +
 gg_season(vic_elec, Demand, period = "year") +
   labs(y="MW", title="Electricity demand: Victoria")
 
+#gg_subseries(vic_elec, Demand, period = "3y") #don't run: it takes too much time to produce the plot
+
 # Figure 2.8
 
 gg_subseries(a10, Cost) +
   labs(y = "$ (millions)", title = "Australian antidiabetic drug sales")
 
 # Australian holiday
+
+tourism <- tourism
+
+tourism %>%
+  mutate(total_trips = sum(Trips))
 
 holitour <- filter(tourism, Purpose == "Holiday")
 holigr <- group_by(holitour, State)
@@ -159,27 +167,31 @@ labs(y = "Overnight trips ('000)", title = "Australian domestic holidays")
 
 # Figure 2.12
 
-autoplot(filter(vic_elec,year(Time) == 2014),Demand) +
+autoplot(filter(vic_elec,year(Time) == 2014), Demand) +
   labs(y = "GW", title = "Half-hourly electricity demand: Victoria")
 
 # Figure 2.13
 
-autoplot(filter(vic_elec, year(Time) == 2014),Temperature) +
+autoplot(filter(vic_elec, year(Time) == 2014), Temperature) +
   labs(y = "Degrees Celsius",
        title = "Half-hourly temperatures: Melbourne, Australia")
 
 # Figure 2.14
 
-ggplot(filter(vic_elec, year(Time) == 2014),
-aes(x = Temperature, y = Demand)) +
+ggplot(filter(vic_elec, year(Time) == 2014), aes(x = Temperature, y = Demand)) +
 geom_point() +
-labs(x = "Temperature (degrees Celsius)",y = "Electricity demand (GW)")
+  geom_hline() +
+  labs(x = "Temperature (degrees Celsius)", y = "Electricity demand (GW)")
 
 # Figure 2.15
 
 library(mvtnorm)
-rho = 0.99
+rho <- 0.99 #correlation coefficient
+
 temp <- rmvnorm(1000,c(0,0),cbind(c(1,rho),c(rho,1)))
+
+cor(temp[,1], temp[,2]) #
+
 Y <- tibble(x = temp[,1],y = temp[,2])
 sp <- ggplot(Y, aes(x=x, y=y)) + geom_point()
 print(sp)
