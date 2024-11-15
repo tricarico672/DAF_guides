@@ -34,6 +34,8 @@ library(forecast)
 library(readr)
 library(latex2exp)
 library(fma)
+
+setwd("~/Desktop/UniTrento/Tutorato/Software R (English)/DAF/homeworks/Homework2")
 ```
 
 ## Useful functions to generate sequences
@@ -46,7 +48,7 @@ The built-in *R* function *seq* generates sequences of number in the range speci
 seq(from = 1, to = 10, by = 2)
 ```
 
-Even though the built-in date type in *R* is at heart a number (when converted to its integer form) it is often better to work with functions that are specific to dates such as *seq.Date* which returns a vector of dates employing a similar logic to *seq*.
+Even though the built-in date type in *R* is at heart a number (when converted to its integer form) it is often better to work with functions that are specific to dates such as *`seq.Date()`* which returns a vector of dates employing a similar logic to *seq*.
 
 ```{r}
 #Generates dates from January 1st 2020 to December 31st 2020 
@@ -57,11 +59,11 @@ seq.Date(from = as.Date("2020-01-01"), to = as.Date("2020-12-31"), by = "month")
 ::: callout-tip
 Notice how you can pass arguments into R functions. Arguments can be passed in either by following an order of positions or by calling the label (i.e., the name) associated to that argument and pass the input after the = sign. To experiment with this idea notice that:
 
-seq.Date(from = as.Date("2020-01-01"), to = as.Date("2020-12-31"), by = "month")
+`seq.Date(from = as.Date("2020-01-01"), to = as.Date("2020-12-31"), by = "month")`
 
 and
 
-seq.Date(as.Date("2020-01-01"), as.Date("2020-12-31"), "month")
+`seq.Date(as.Date("2020-01-01"), as.Date("2020-12-31"), "month")`
 
 produce exactly the same result. This is useful and applies to all functions in R. Try it for yourself!
 :::
@@ -93,7 +95,7 @@ So far in the course you've explored some useful statistics that can be computed
 Autocorrelation refers to how much correlated (if any) the observations in a time series are. Keep in mind that autocorrelation computes the correlation between a variable and its *lagged* values. A simple example follows below:
 
 ```{r}
-hours <- read_csv("Homework2/hours.dat")
+hours <- read_csv("hours.dat")
 
 hours$month <- seq.Date(as.Date("1982/07/01"), as.Date("1987/06/01"), "month")
 
@@ -115,7 +117,7 @@ autoplot(auto_corr, y = hours)
 
 Transformations refer to the use of mathematical functions to correct for some undesirable features in the data while retaining as much information as possible. To better understand what this refers to, let's have a look at Exercise 2 from HW2.
 
-First, let's have a look at what the sample() function does.
+First, let's have a look at what the `sample()` function does.
 
 ```{r}
 id_number <- 254978
@@ -124,7 +126,7 @@ set.seed(id_number)
 sample(aus_retail$`Series ID`,1)
 ```
 
-You can notice that sample() returns a randomly sampled element of the Series ID column in the aus_retail dataframe. We use set.seed() to make sure that every time we run the function it will return the same series. This is done to preserve code reproducibility since when you send your R script to someone else they will get the same result out of it (i.e., "A3349480L").
+You can notice that `sample()` returns a randomly sampled element of the Series ID column in the aus_retail dataframe. We use set.seed() to make sure that every time we run the function it will return the same series. This is done to preserve code reproducibility since when you send your R script to someone else they will get the same result out of it (i.e., "A3349480L").
 
 ```{r}
 id_number <- 254978
@@ -140,9 +142,9 @@ myseries <- aus_retail |>
 myseries
 ```
 
-Knowing that sample() returns "A3349480L" helps you also understand what is going on in the cell above. In short, the aus_retail dataframe is being filtered and only the rows which have Series ID equal to "A3349480L" are kept and assigned to the variable *myseries* (meaning we can later refer to this filtered dataframe by the name *myseries*).
+Knowing that sample() returns "A3349480L" helps you also understand what is going on in the cell above. In short, the aus_retail dataframe is being filtered and only the rows which have Series ID equal to "A3349480L" are kept and assigned to the variable *`myseries`* (meaning we can later refer to this filtered dataframe by the name *`myseries`*).
 
-Now we move on and explore Box-Cox transformations, which are transformations used to normalize data that do not appear to be [normally distributed](https://www.scribbr.com/statistics/normal-distribution/#:~:text=In%20a%20normal%20distribution%2C%20data%20are%20symmetrically%20distributed%20with%20no,same%20in%20a%20normal%20distribution.). You can spot deviations from normality in different ways, either through data visualizations or through specific tests (don't worry for now you don't need to know about this stuff, just focus on visualizations)
+Now we move on and explore Box-Cox transformations, which are transformations used to normalize data that do not appear to be [normally distributed](https://www.scribbr.com/statistics/normal-distribution/#:~:text=In%20a%20normal%20distribution%2C%20data%20are%20symmetrically%20distributed%20with%20no,same%20in%20a%20normal%20distribution.). These transformations are also used to make "the size of the seasonal variation about the same across the whole series" as pointed out in Chapter 3.1 of your [textbook](https://otexts.com/fpp3/transformations.html). Therefore, they tend to alleviate the problems associated to seasonality in time series and exploit these patterns to derive more information which are useful for time series modeling! You can spot deviations from normality in different ways, either through data visualizations or through specific tests (don't worry for now you don't need to know about this stuff, just focus on visualizations)
 
 ```{r}
 guer <- features(myseries, Turnover, features = guerrero) 
@@ -170,9 +172,11 @@ hist(myseries$Turnover, main = "Original Data")
 Also, you can use a quantile-quantile plot which shows how much of the data falls within specified quantiles (represented on the x-axis). Normality here is represented by points that are closer to the diagonal line.
 
 ```{r}
-qqnorm(y = myseries$Turnover_transformed)
-#quantile-quantile plot to show the normality of the data (closer to the diagonal is better)
+qqnorm(y = myseries$Turnover_transformed) #<1>
+
 ```
+
+1.  quantile-quantile plot to show the normality of the data (closer to the diagonal is better)
 
 ```{r}
 qqnorm(y = myseries$Turnover)
@@ -186,7 +190,7 @@ autoplot(myseries, box_cox(Turnover, lambda)) +
 
 ```
 
-it is concluded that a box-cox transformation with lambda = -0.20... improves the fit to normality of the data as shown by the quantile-quantile plot and the histogram.
+it is concluded that a box-cox transformation with lambda $\approx -0.20$ improves the fit to normality of the data as shown by the quantile-quantile plot and the histogram.
 
 ## Data visualization
 
@@ -215,7 +219,7 @@ As usual, we import the dataset and perform the routine steps to organize it int
 autoplot(labour_ts, .vars = labor_force) #time plot
 ```
 
-You can plot a time plot very easily with autoplot(). This allows you to see trends in data.
+You can plot a time plot very easily with `autoplot()`. This allows you to see trends in data.
 
 ### Correlogram
 
@@ -227,8 +231,8 @@ autoplot(autocorr) #huge autocorrelation across months
 
 To compute a correlogram you follow these steps:
 
-1.  you estimate the auto correlation function with ACF(dataset, column_in_dataset) and assign it to a variable (autocorr in my example above)
-2.  then you pass that variable as an argument in autoplot() and that will do the trick.
+1.  you estimate the auto correlation function with `ACF(dataset, name_of_column_in_dataset)` and assign it to a variable (autocorr in my example above)
+2.  then you pass that variable as an argument in `autoplot()` and that will do the trick.
 
 ### Seasonality Plots
 
@@ -241,7 +245,7 @@ gg_season(labour_ts, labor_force) +
        title = "Seasonal plot: Labor Force in AUS")
 ```
 
-For these plots you use gg_season() and specify the dataset and the column to plot. You can add (literally with a + sign) other layers to your plot. In my example I added y labels and a title. If you learn this syntax you can be sure that you can use it on any other ggplot you'll ever do in your life.
+For these plots you use `gg_season()` and specify the dataset and the column to plot. You can add (literally with a + sign) other layers to your plot. In my example I added y labels and a title. If you learn this syntax you can be sure that you can use it on any other ggplot you'll ever do in your life.
 
 From this seasonal plot we learn that every year around December more people join the labor force.
 
@@ -253,24 +257,29 @@ gg_subseries(labour_ts, labor_force) +
        title = "Subseries plot: Labor Force in AUS")
 ```
 
-In these plots we can see how the series evolves across months in different years. The syntax is the same as the one for seasonality plots, except for the function gg_subseries() of course.
+In these plots we can see how the series evolves across months in different years. The syntax is the same as the one for seasonality plots, except for the function `gg_subseries()` of course.
 
 ```{r}
-hist(labour_ts$labor_force) 
-#the distribution appears to be bimodal, therefore a smoothing through box-cox would make sense
+hist(labour_ts$labor_force) #<1>
 ```
+
+1.  the distribution appears to be bimodal, therefore a smoothing through box-cox would make sense
 
 ```{r}
 qqnorm(y = labour_ts$labor_force)
 ```
 
 ```{r}
-lambda <- features(labour_ts, .var = labor_force, features = guerrero)$lambda_guerrero
-transformed_labforce <- box_cox(labour_ts$labor_force, lambda)
+lambda <- features(labour_ts, .var = labor_force, features = guerrero)$lambda_guerrero #<1>
+transformed_labforce <- box_cox(labour_ts$labor_force, lambda) #<2>
 
-labour_ts$transformed_labforce <- transformed_labforce
+labour_ts$transformed_labforce <- transformed_labforce #<3>
 labour_ts
 ```
+
+1.  estimate the value of lambda using the Guerrero method through the `features()` extraction
+2.  perform the `box_cox()` transformation on the `labor_force` column of the data using the `lambda` estimated at point 1
+3.  create a new column in `labour_ts` called `transformed_labforce` which contains the values of the box_cox transformation
 
 ```{r}
 hist(labour_ts$transformed_labforce) 
