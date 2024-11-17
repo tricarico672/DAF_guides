@@ -473,7 +473,7 @@ var_skewed
 
 Instead, for the case above, the mode is unique and is the value 1.
 
-\begin{tcolorbox}[enhanced jigsaw, bottomtitle=1mm, bottomrule=.15mm, opacitybacktitle=0.6, leftrule=.75mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, colback=white, coltitle=black, colframe=quarto-callout-note-color-frame, opacityback=0, colbacktitle=quarto-callout-note-color!10!white, breakable, rightrule=.15mm, toptitle=1mm, titlerule=0mm, arc=.35mm, toprule=.15mm, left=2mm]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, bottomtitle=1mm, colframe=quarto-callout-note-color-frame, leftrule=.75mm, rightrule=.15mm, titlerule=0mm, opacityback=0, toptitle=1mm, bottomrule=.15mm, left=2mm, arc=.35mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, toprule=.15mm, opacitybacktitle=0.6, colback=white, breakable, coltitle=black]
 
 As a side note, consider the following variable \(X\) which can take
 values 1,2,3,4,5. Since each value appears with the same frequency
@@ -505,7 +505,7 @@ values of a variable are from their mean. Since we want an average
 value, we divide the \emph{squared sum of all the deviations} by the
 sample size \(N\).
 
-\begin{tcolorbox}[enhanced jigsaw, bottomtitle=1mm, bottomrule=.15mm, opacitybacktitle=0.6, leftrule=.75mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, colback=white, coltitle=black, colframe=quarto-callout-note-color-frame, opacityback=0, colbacktitle=quarto-callout-note-color!10!white, breakable, rightrule=.15mm, toptitle=1mm, titlerule=0mm, arc=.35mm, toprule=.15mm, left=2mm]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, bottomtitle=1mm, colframe=quarto-callout-note-color-frame, leftrule=.75mm, rightrule=.15mm, titlerule=0mm, opacityback=0, toptitle=1mm, bottomrule=.15mm, left=2mm, arc=.35mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, toprule=.15mm, opacitybacktitle=0.6, colback=white, breakable, coltitle=black]
 
 \(\mu\) is referred to as the
 \href{https://www.wallstreetmojo.com/sample-mean-vs-population-mean/}{population
@@ -557,7 +557,7 @@ moving on! (Don't get confused by the
 \href{https://calculator.name/scientific-notation-to-decimal/1.25e13}{scientific
 notation} employed here by R in the output)
 
-\begin{tcolorbox}[enhanced jigsaw, bottomtitle=1mm, bottomrule=.15mm, opacitybacktitle=0.6, leftrule=.75mm, title=\textcolor{quarto-callout-caution-color}{\faFire}\hspace{0.5em}{Caution}, colback=white, coltitle=black, colframe=quarto-callout-caution-color-frame, opacityback=0, colbacktitle=quarto-callout-caution-color!10!white, breakable, rightrule=.15mm, toptitle=1mm, titlerule=0mm, arc=.35mm, toprule=.15mm, left=2mm]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-caution-color!10!white, bottomtitle=1mm, colframe=quarto-callout-caution-color-frame, leftrule=.75mm, rightrule=.15mm, titlerule=0mm, opacityback=0, toptitle=1mm, bottomrule=.15mm, left=2mm, arc=.35mm, title=\textcolor{quarto-callout-caution-color}{\faFire}\hspace{0.5em}{Caution}, toprule=.15mm, opacitybacktitle=0.6, colback=white, breakable, coltitle=black]
 
 When computing the variance of a variable you have to keep in mind that
 the resulting variance will be denominated by the square of the original
@@ -572,7 +572,7 @@ Next we learn how to address this problem.
 
 \end{tcolorbox}
 
-\begin{tcolorbox}[enhanced jigsaw, bottomtitle=1mm, bottomrule=.15mm, opacitybacktitle=0.6, leftrule=.75mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, colback=white, coltitle=black, colframe=quarto-callout-note-color-frame, opacityback=0, colbacktitle=quarto-callout-note-color!10!white, breakable, rightrule=.15mm, toptitle=1mm, titlerule=0mm, arc=.35mm, toprule=.15mm, left=2mm]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-note-color!10!white, bottomtitle=1mm, colframe=quarto-callout-note-color-frame, leftrule=.75mm, rightrule=.15mm, titlerule=0mm, opacityback=0, toptitle=1mm, bottomrule=.15mm, left=2mm, arc=.35mm, title=\textcolor{quarto-callout-note-color}{\faInfo}\hspace{0.5em}{Note}, toprule=.15mm, opacitybacktitle=0.6, colback=white, breakable, coltitle=black]
 
 The formula for the variance introduced in
 Equation~\ref{eq-pop-variance} is commonly referred to as the
@@ -580,9 +580,9 @@ Equation~\ref{eq-pop-variance} is commonly referred to as the
 between this quantity and the sample variance which is computed as
 follows:
 
-\[
+\begin{equation}\phantomsection\label{eq-sample-var}{
 s^2 = \frac{1}{n-1} \sum_{i=1}^n (x_i - \bar{x})^2
-\]
+}\end{equation}
 
 Notice the use of the \(s\) to represent a
 \href{https://www.sciencedirect.com/topics/mathematics/sample-statistic}{sample
@@ -678,7 +678,7 @@ that is close to 0, which is the same as saying that the two variables
 are independent (i.e., knowing that one of the variables changes tells
 me nothing about how the other behaves).
 
-\begin{tcolorbox}[enhanced jigsaw, bottomtitle=1mm, bottomrule=.15mm, opacitybacktitle=0.6, leftrule=.75mm, title=\textcolor{quarto-callout-caution-color}{\faFire}\hspace{0.5em}{Caution}, colback=white, coltitle=black, colframe=quarto-callout-caution-color-frame, opacityback=0, colbacktitle=quarto-callout-caution-color!10!white, breakable, rightrule=.15mm, toptitle=1mm, titlerule=0mm, arc=.35mm, toprule=.15mm, left=2mm]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-caution-color!10!white, bottomtitle=1mm, colframe=quarto-callout-caution-color-frame, leftrule=.75mm, rightrule=.15mm, titlerule=0mm, opacityback=0, toptitle=1mm, bottomrule=.15mm, left=2mm, arc=.35mm, title=\textcolor{quarto-callout-caution-color}{\faFire}\hspace{0.5em}{Caution}, toprule=.15mm, opacitybacktitle=0.6, colback=white, breakable, coltitle=black]
 
 Covariance has the same issue that variance has: squared units of
 measure. We learn how to deal with this next.
@@ -715,7 +715,7 @@ From here, we notice some important properties of \(r\):
   deviations at the bottom are always positive values.
 \end{enumerate}
 
-\begin{tcolorbox}[enhanced jigsaw, bottomtitle=1mm, bottomrule=.15mm, opacitybacktitle=0.6, leftrule=.75mm, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, colback=white, coltitle=black, colframe=quarto-callout-important-color-frame, opacityback=0, colbacktitle=quarto-callout-important-color!10!white, breakable, rightrule=.15mm, toptitle=1mm, titlerule=0mm, arc=.35mm, toprule=.15mm, left=2mm]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-important-color!10!white, bottomtitle=1mm, colframe=quarto-callout-important-color-frame, leftrule=.75mm, rightrule=.15mm, titlerule=0mm, opacityback=0, toptitle=1mm, bottomrule=.15mm, left=2mm, arc=.35mm, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, toprule=.15mm, opacitybacktitle=0.6, colback=white, breakable, coltitle=black]
 
 Notice that \(r\) measures the strength of \emph{linear correlation}
 between two variables. This means that if \(X\) and \(Y\) are linked by
@@ -888,8 +888,8 @@ Let's plot it out
 \includegraphics{stats_review_files/figure-pdf/unnamed-chunk-18-1.pdf}
 \end{center}
 
-there is also a special case of the normal distribution which occur when
-\(\mu=0\) and \(\sigma^2=1\). This is called the
+there is also a special case of the normal distribution which occurs
+when \(\mu=0\) and \(\sigma^2=1\). This is called the
 \href{https://www.scribbr.com/statistics/standard-normal-distribution/}{standard
 normal distribution} (represented by \(Z\)). This means that one can
 \href{https://www.listendata.com/2017/04/how-to-standardize-variable-in-regression.html}{\emph{standardize}}
@@ -915,9 +915,11 @@ comes with
 \href{https://www.scribbr.com/statistics/degrees-of-freedom/\#:~:text=Degrees\%20of\%20freedom\%2C\%20often\%20represented,minus\%20the\%20number\%20of\%20restrictions.}{degrees
 of freedom} which are used to assess how many data points are left free
 to vary after having estimated the population parameters that we need
-from the sample. In this case, note that since we are using \(s^{2}\) to
-estimate \(\sigma^{2}\) we lose one degree of freedom and our T
-distribution will be defined by \(n-1\) degrees of freedom.
+from the sample. In this case, note that since we are using \(\bar{x}\)
+to estimate \(\mu\) we lose one degree of freedom and our T distribution
+will be defined by \(n-1\) degrees of freedom. To be convinced of this
+you can take another look at Equation~\ref{eq-sample-var} and notice
+that the \(\mu\) is replaced by \(\bar{x}\).
 
 \subsection{Tests of hypotheses}\label{sec-testhyp}
 
@@ -943,27 +945,30 @@ Let's break this down:
 \item
   Here \(H_0\) is known as the
   \href{https://en.wikipedia.org/wiki/Null_hypothesis}{null hypothesis},
-  and it represents the \emph{status quo} or what we assume to be the
-  truth.
+  and it represents the
+  \href{https://www.vocabulary.com/dictionary/status\%20quo}{status quo}
+  or what we assume to be the truth.
 \item
   \(H_a\) is the
   \href{https://en.wikipedia.org/wiki/Alternative_hypothesis}{alternative}
   (or research) hypothesis, and it is what we want to find evidence for.
   Note that finding supporting evidence for \(H_a\) makes \(H_0\) less
-  credible.
+  credible. This derives from the way in which the two hypothesis are
+  constructed and how one must necessarily be the complement of the
+  other in order for this method to work.
 \item
   \(\mu_i\) for \(i = {1,2}\) represents the theoretical population mean
   of group 1 and 2, which we are trying to infer from our sample data.
 \end{enumerate}
 
-Now, it would useful to have a metric that could help us determine
+Now, it would be useful to have a metric that could help us determine
 whether there is enough supporting evidence for \(H_a\) to \emph{reject}
 \(H_0\). To do this, we introduce the concepts of
 \href{https://en.wikipedia.org/wiki/Statistical_significance}{significance
 level} (denoted by \(\alpha\)) and
 \href{https://www.scribbr.com/statistics/p-value/\#:~:text=A\%20p\%2Dvalue\%2C\%20or\%20probability,to\%20perform\%20your\%20statistical\%20test.}{p-value}
 (denoted by \(p\)). The p-value of a test is the probability of
-observing the result of our analysis if we establish that the null
+observing the result of our analysis if we assume that the null
 hypothesis is true. Of course, a small p-value tells us that what we
 observed is unlikely to happen if the null hypothesis was effectively
 true. How small the p-value needs to be to reject \(H_0\) depends on the
@@ -975,7 +980,7 @@ concepts of p-value and significance level just discussed, the following
 method is used to determine whether one should reject or do not reject
 the null hypothesis:
 
-\begin{tcolorbox}[enhanced jigsaw, bottomtitle=1mm, bottomrule=.15mm, opacitybacktitle=0.6, leftrule=.75mm, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, colback=white, coltitle=black, colframe=quarto-callout-important-color-frame, opacityback=0, colbacktitle=quarto-callout-important-color!10!white, breakable, rightrule=.15mm, toptitle=1mm, titlerule=0mm, arc=.35mm, toprule=.15mm, left=2mm]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-important-color!10!white, bottomtitle=1mm, colframe=quarto-callout-important-color-frame, leftrule=.75mm, rightrule=.15mm, titlerule=0mm, opacityback=0, toptitle=1mm, bottomrule=.15mm, left=2mm, arc=.35mm, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, toprule=.15mm, opacitybacktitle=0.6, colback=white, breakable, coltitle=black]
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -1086,7 +1091,7 @@ height distributions that we ended up observing in the two groups. For
 this reason, \(H_0\) does not seem to reflect well what we observed in
 our experiment and therefore is rejected.
 
-\begin{tcolorbox}[enhanced jigsaw, bottomtitle=1mm, bottomrule=.15mm, opacitybacktitle=0.6, leftrule=.75mm, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, colback=white, coltitle=black, colframe=quarto-callout-important-color-frame, opacityback=0, colbacktitle=quarto-callout-important-color!10!white, breakable, rightrule=.15mm, toptitle=1mm, titlerule=0mm, arc=.35mm, toprule=.15mm, left=2mm]
+\begin{tcolorbox}[enhanced jigsaw, colbacktitle=quarto-callout-important-color!10!white, bottomtitle=1mm, colframe=quarto-callout-important-color-frame, leftrule=.75mm, rightrule=.15mm, titlerule=0mm, opacityback=0, toptitle=1mm, bottomrule=.15mm, left=2mm, arc=.35mm, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, toprule=.15mm, opacitybacktitle=0.6, colback=white, breakable, coltitle=black]
 
 Tests of hypotheses are everywhere in inferential statistics, so be sure
 to have familiarized with what discussed in this section.
@@ -1229,7 +1234,7 @@ the \texttt{summary} of our regression we see that it is -0.027. Since
 after running the test the p-value is .9785 \textgreater{} \(\alpha\) =
 .1 it is concluded that body size is not a significant predictor of
 brain size in the samples of animals presented in this dataset.
-Therefore, we cannot interpret the estimated slope (\(-4.326e^-4\)).
+Therefore, we cannot interpret the estimated slope (\(-4.326e^{-4}\)).
 This is also the case because the significance for the overall model,
 reported as the p-value of the F-statistic at the bottom of the summary,
 is also greater than \(\alpha\) = .1.

@@ -173,7 +173,7 @@ The formula for the variance introduced in @eq-pop-variance is commonly referred
 
 $$
 s^2 = \frac{1}{n-1} \sum_{i=1}^n (x_i - \bar{x})^2
-$$
+$$ {#eq-sample-var}
 
 Notice the use of the $s$ to represent a [sample statistic](https://www.sciencedirect.com/topics/mathematics/sample-statistic). Sample statistics are usually denoted by Latin alphabet letters as opposed to population statistics denoted by letters from the Greek alphabet.
 
@@ -303,7 +303,7 @@ abline(v=mean(x), col = "red", lwd=2)
 
 ```
 
-there is also a special case of the normal distribution which occur when $\mu=0$ and $\sigma^2=1$. This is called the [standard normal distribution](https://www.scribbr.com/statistics/standard-normal-distribution/) (represented by $Z$). This means that one can [*standardize*](https://www.listendata.com/2017/04/how-to-standardize-variable-in-regression.html) any normal random variable to bring it back to this standard scale and obtain a distribution like the one above. To do that, you simply need to subtract the *mean* of the variable you are standardizing and divide by its *standard deviation*.
+there is also a special case of the normal distribution which occurs when $\mu=0$ and $\sigma^2=1$. This is called the [standard normal distribution](https://www.scribbr.com/statistics/standard-normal-distribution/) (represented by $Z$). This means that one can [*standardize*](https://www.listendata.com/2017/04/how-to-standardize-variable-in-regression.html) any normal random variable to bring it back to this standard scale and obtain a distribution like the one above. To do that, you simply need to subtract the *mean* of the variable you are standardizing and divide by its *standard deviation*.
 
 $$
 Z = \frac{X - \mu}{\sigma}
@@ -311,7 +311,7 @@ $$
 
 ### Student's T distribution
 
-Another useful distribution is the [T distribution](https://en.wikipedia.org/wiki/Student%27s_t-distribution). Shape-wise the T distribution has the same nice properties of the standard normal distribution (of which it is a generalization). However, it is common to use this distribution when we do not know the true population value of $\sigma^2$ and we have to use its sample counterpart $s^{2}$ as its estimate. The T distribution comes with [degrees of freedom](https://www.scribbr.com/statistics/degrees-of-freedom/#:~:text=Degrees%20of%20freedom%2C%20often%20represented,minus%20the%20number%20of%20restrictions.) which are used to assess how many data points are left free to vary after having estimated the population parameters that we need from the sample. In this case, note that since we are using $s^{2}$ to estimate $\sigma^{2}$ we lose one degree of freedom and our T distribution will be defined by $n-1$ degrees of freedom.
+Another useful distribution is the [T distribution](https://en.wikipedia.org/wiki/Student%27s_t-distribution). Shape-wise the T distribution has the same nice properties of the standard normal distribution (of which it is a generalization). However, it is common to use this distribution when we do not know the true population value of $\sigma^2$ and we have to use its sample counterpart $s^{2}$ as its estimate. The T distribution comes with [degrees of freedom](https://www.scribbr.com/statistics/degrees-of-freedom/#:~:text=Degrees%20of%20freedom%2C%20often%20represented,minus%20the%20number%20of%20restrictions.) which are used to assess how many data points are left free to vary after having estimated the population parameters that we need from the sample. In this case, note that since we are using $\bar{x}$ to estimate $\mu$ we lose one degree of freedom and our T distribution will be defined by $n-1$ degrees of freedom. To be convinced of this you can take another look at @eq-sample-var and notice that the $\mu$ is replaced by $\bar{x}$.
 
 ## Tests of hypotheses {#sec-testhyp}
 
@@ -327,11 +327,11 @@ $$
 
 Let's break this down:
 
-1.  Here $H_0$ is known as the [null hypothesis](https://en.wikipedia.org/wiki/Null_hypothesis), and it represents the *status quo* or what we assume to be the truth.
-2.  $H_a$ is the [alternative](https://en.wikipedia.org/wiki/Alternative_hypothesis) (or research) hypothesis, and it is what we want to find evidence for. Note that finding supporting evidence for $H_a$ makes $H_0$ less credible.
+1.  Here $H_0$ is known as the [null hypothesis](https://en.wikipedia.org/wiki/Null_hypothesis), and it represents the [status quo](https://www.vocabulary.com/dictionary/status%20quo) or what we assume to be the truth.
+2.  $H_a$ is the [alternative](https://en.wikipedia.org/wiki/Alternative_hypothesis) (or research) hypothesis, and it is what we want to find evidence for. Note that finding supporting evidence for $H_a$ makes $H_0$ less credible. This derives from the way in which the two hypothesis are constructed and how one must necessarily be the complement of the other in order for this method to work.
 3.  $\mu_i$ for $i = {1,2}$ represents the theoretical population mean of group 1 and 2, which we are trying to infer from our sample data.
 
-Now, it would useful to have a metric that could help us determine whether there is enough supporting evidence for $H_a$ to *reject* $H_0$. To do this, we introduce the concepts of [significance level](https://en.wikipedia.org/wiki/Statistical_significance) (denoted by $\alpha$) and [p-value](https://www.scribbr.com/statistics/p-value/#:~:text=A%20p%2Dvalue%2C%20or%20probability,to%20perform%20your%20statistical%20test.) (denoted by $p$). The p-value of a test is the probability of observing the result of our analysis if we establish that the null hypothesis is true. Of course, a small p-value tells us that what we observed is unlikely to happen if the null hypothesis was effectively true. How small the p-value needs to be to reject $H_0$ depends on the significance level we are using for our tests. Commonly, the .01, .05, and .1 significance levels are the most used ones, but there are scientific fields that require even smaller $\alpha$ (e.g., [physics](https://home.cern/resources/faqs/five-sigma)). Given the concepts of p-value and significance level just discussed, the following method is used to determine whether one should reject or do not reject the null hypothesis:
+Now, it would be useful to have a metric that could help us determine whether there is enough supporting evidence for $H_a$ to *reject* $H_0$. To do this, we introduce the concepts of [significance level](https://en.wikipedia.org/wiki/Statistical_significance) (denoted by $\alpha$) and [p-value](https://www.scribbr.com/statistics/p-value/#:~:text=A%20p%2Dvalue%2C%20or%20probability,to%20perform%20your%20statistical%20test.) (denoted by $p$). The p-value of a test is the probability of observing the result of our analysis if we assume that the null hypothesis is true. Of course, a small p-value tells us that what we observed is unlikely to happen if the null hypothesis was effectively true. How small the p-value needs to be to reject $H_0$ depends on the significance level we are using for our tests. Commonly, the .01, .05, and .1 significance levels are the most used ones, but there are scientific fields that require even smaller $\alpha$ (e.g., [physics](https://home.cern/resources/faqs/five-sigma)). Given the concepts of p-value and significance level just discussed, the following method is used to determine whether one should reject or do not reject the null hypothesis:
 
 ::: callout-important
 1.  If $p < \alpha \rightarrow$ reject $H_0$
@@ -423,7 +423,7 @@ $$
 H_a: t \neq 0
 $$
 
-If we compare the t-score of the `body` variable obtained from the `summary` of our regression we see that it is -0.027. Since after running the test the p-value is .9785 \> $\alpha$ = .1 it is concluded that body size is not a significant predictor of brain size in the samples of animals presented in this dataset. Therefore, we cannot interpret the estimated slope ($-4.326e^-4$). This is also the case because the significance for the overall model, reported as the p-value of the F-statistic at the bottom of the summary, is also greater than $\alpha$ = .1.
+If we compare the t-score of the `body` variable obtained from the `summary` of our regression we see that it is -0.027. Since after running the test the p-value is .9785 \> $\alpha$ = .1 it is concluded that body size is not a significant predictor of brain size in the samples of animals presented in this dataset. Therefore, we cannot interpret the estimated slope ($-4.326e^{-4}$). This is also the case because the significance for the overall model, reported as the p-value of the F-statistic at the bottom of the summary, is also greater than $\alpha$ = .1.
 
 If you wanted to plot out the line obtained by the above linear model, you can use this code to visualize it
 
