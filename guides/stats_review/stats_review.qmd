@@ -315,7 +315,7 @@ $$
 
 Another useful distribution is the [T distribution](https://en.wikipedia.org/wiki/Student%27s_t-distribution). Shape-wise the T distribution has the same nice properties of the standard normal distribution (of which it is a generalization). However, it is common to use this distribution when we do not know the true population value of $\sigma^2$ and we have to use its sample counterpart $s^{2}$ as its estimate. The T distribution comes with [degrees of freedom](https://www.scribbr.com/statistics/degrees-of-freedom/#:~:text=Degrees%20of%20freedom%2C%20often%20represented,minus%20the%20number%20of%20restrictions.) which are used to assess how many data points are left free to vary after having estimated the population parameters that we need from the sample. In this case, note that since we are using $\bar{x}$ to estimate $\mu$ we lose one degree of freedom and our T distribution will be defined by $n-1$ degrees of freedom. To be convinced of this you can take another look at @eq-sample-var and notice that the $\mu$ is replaced by $\bar{x}$.
 
-## Tests of hypotheses {#sec-testhyp}
+## Hypothesis Testing {#sec-testhyp}
 
 Given two groups of people, you might be interested in understanding which group is taller on average. This can be translated into a test of hypothesis. Let's say you believe group 1 to be taller on average, how would you go about testing this quantitatively? First, let's define the two hypotheses:
 
