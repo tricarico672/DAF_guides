@@ -1,6 +1,6 @@
 rm(list=ls()) #used to clean the global environment
 library(fpp3)
-Sys.setlocale(locale = "English") 
+Sys.setlocale(locale = "English")
 
 gdppc <- mutate(global_economy, "GDP_per_capita" = GDP / Population)
 is_tsibble(gdppc) #confirms that gdppc is already a tsibble, so we don't need to convert it
@@ -9,6 +9,10 @@ is_tsibble(gdppc) #confirms that gdppc is already a tsibble, so we don't need to
 
 autoplot(filter(gdppc, Country == "Sweden"), GDP_per_capita) + #filter for Sweden only
   labs(y = "$US", title = "GDP per capita for Sweden")
+
+ggplot(filter(gdppc, Country == "Sweden"), aes(x=Year, y=GDP_per_capita)) +
+  geom_point() +
+  geom_smooth(method="lm")
 
 # define the model
 
@@ -19,6 +23,7 @@ TSLM(GDP_per_capita ~ trend()) #set up time series linear model between GDP and 
 
 fit <- model(gdppc, trend_model = TSLM(GDP_per_capita ~ trend())) #fitting the model to data
 filter(gdppc,is.na(GDP_per_capita)) #shows only countries where gdp is missing
+
 report(filter(fit,Country == 'Sweden')) # see output and evaluate
 
 # forecast
@@ -28,8 +33,10 @@ forecast(fit, h = "3 years")
 # plot everything for some country
 
 fore <- filter(forecast(fit, h = "3 years"), Country == "Sweden") 
-autoplot(fore, gdppc) + labs(y = "$US",
-  title = "GDP per capita for Sweden") # color='black'
+
+autoplot(fore, gdppc) + 
+  labs(y = "$US",
+       title = "GDP per capita for Sweden") # color='black'
 
 # Figure 5.3 (mean)
 

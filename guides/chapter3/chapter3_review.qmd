@@ -1,0 +1,526 @@
+---
+title: "Chapter 3 Review"
+author: "Anthony Tricarico"
+link-citations: true
+number-sections: true
+
+mainfont: Times New Roman
+
+format:  
+  pdf:
+    toc: true                 # Adds a TOC for PDF as well
+    margin-top: 1.5cm         # Sets top margin for PDF
+    margin-left: 2cm          # Left margin for better readability
+    margin-right: 2cm         # Right margin for better readability
+    fig-align: center
+
+# Aesthetic options for code rendering
+code-block-style: github      # Styles code blocks similar to GitHub's appearance
+code-fold: true               # Allows readers to fold/unfold code blocks
+code-overflow: wrap           # Ensures code stays within margins
+page-layout: article          # Article layout keeps focus on content
+editor: visual
+---
+
+```{r setup, include = F}
+# Global options for R code chunks
+knitr::opts_chunk$set(fig.align = "center")
+```
+
+# Time Series Decomposition
+
+The main topic of this section is how we can exploit the information contained in time series data to make reliable and useful forecasts. You might have noticed that thus far some time series exhibited some peculiar behaviors. Those behaviors were highlighted by the plots produced to visualize the data. For reference, you can have a look at section [3.2 of your textbook](https://otexts.com/fpp3/components.html) to have a basic idea of what it is that we are talking about.
+
+## Trend {#sec-trend}
+
+The first component of a time series is its trend. Put simply, the trend refers to where the data seems to be headed in a specific time window (i.e., if I compare the start and the end of the time series, I check if my variable is increasing or decreasing in value over time). Making an example using the employment data for the US, we have the following.
+
+```{r}
+library(fpp3)
+library(latex2exp)
+library(slider)
+library(gridExtra)
+
+us_employment %>%
+  filter(Title == "Retail Trade") %>% #<1>
+  autoplot(Employed) #<2>
+```
+
+1.  filtering only for retail sector data
+2.  plotting the time series
+
+Overall, we can see that the trend from 1940 to 2020 is positive (i.e., there has been a significant growth in people employed in the retail sector from 1940 to 2020). However, since we said that the trend is dependent on the time window that is analyzed we can show this by considering only data from 1990 to 1992.
+
+```{r}
+us_employment %>%
+  filter(Title == "Retail Trade", year(Month) >= 1990, year(Month) <= 1992) %>% #<1>
+  autoplot(Employed) #<2>
+  
+```
+
+1.  filtering for retail sector data between 1990 and 1992.
+2.  plotting the number of people employed in the retail sector throughout the period.
+
+Here, we see how it is much more difficult to determine a specific trend for this time period as the beginning of the series seems to be almost at the same level as the end value of the series (i.e., number of people employed in Jan 1990 is almost the same as the number of people employed in Dec 1992). Keeping in mind this concept of trend is fundamental since we will use it to determine the portion of variation of the time series that can be attributed to it.
+
+## Seasonality {#sec-seasonality}
+
+The second component of a time series is its [seasonality](https://www.investopedia.com/terms/s/seasonality.asp). Seasonality refers basically to the cyclical trends that are present in the data. For instance, one might notice that in the months of October, November and December, each year from 1990 to 1992 there is a recurring spike in employment. We can visualize this using a seasonal plot produced with `gg_season()`.
+
+```{r}
+us_employment %>%
+  filter(Title == "Retail Trade", year(Month) >= 1990, year(Month) <= 1992) %>%
+  gg_season(Employed)
+
+```
+
+Notice how every year there is a larger number of employed people in the last months of the year as noticed above.
+
+Up to this point, we only know how to visualize trend and seasonality, but now we will learn how to split the time series into its different trend and seasonal components to be able to pinpoint exactly what portion of variation in our time series can be attributed to each one.
+
+## Moving averages
+
+Before we learn more about decomposition techniques, it is first important to define what a [moving average](https://en.wikipedia.org/wiki/Moving_average) is. A moving average is simply the arithmetic mean computed on a subset of the original data. This average is *moving* in the sense that the time window we consider *slides* around and considers sequentially each different subset. How many time periods should be averaged together is determined by the *order (*$m$) of the moving average. An order of 5, for instance, means that the moving average is being computed on the 5 adjacent observations. This means that I am only considering the observation at the current time ($Y_t$) along with the 2 previous observations ($Y_{t-2}$ and $Y_{t-1}$) and the following 2 observations in time ($Y_{t+1}$ and $Y_{t+2}$). Putting this into a formula:
+
+$$
+\frac{Y_{t-2}+Y_{t-1}+Y_{t}+Y_{t+1}+Y_{t+2}}{m}
+$$ {#eq-ex-moving-avg}
+
+::: callout-important
+Notice that the order $m$ is always computed as the number of observations considered before the current observation and the number of observations considered after the current observation +1.
+:::
+
+We notice that as $t$ changes the time window *slides* allowing for different observations to enter the computation. In general, the formula to compute moving averages is given by:
+
+$$
+\frac{1}{m} \sum_{j=-k}^{k} Y_{t+j}
+$$ {#eq-moving-avg}
+
+@eq-moving-avg effectively generalizes what observed in @eq-ex-moving-avg
+
+Moving averages are used to smooth out the time series so as to highlight an overarching trend in the data and that's why they are so important!
+
+### Moving averages in R
+
+To compute the moving average of a variable in your time series, you can follow these steps:
+
+1.  use the `slide_dbl()` function from the `slider` package
+2.  Now you specify the following arguments inside the function:
+    1.  the name of the dataset (which can be passed into the function also through a pipe operator)
+    2.  the name of the column inside the dataset to use for computing the moving average
+    3.  specify that you want to compute the mean
+    4.  set .before and .after to the number of observations you want to be in each average (the $k$ in @eq-moving-avg)
+    5.  set .complete = TRUE so that the function only computes the average for observations that have no values outside the specified range given by \[$-k$, $k$\].
+
+The function `slide_dbl()` will return a vector (i.e., a column) containing the computed moving average of the column specified. You can then add the result of the function to the dataset using `mutate()`. Here follows an example:
+
+```{r, warning=FALSE}
+employment_avg <- us_employment %>%
+  filter(Title == "Retail Trade", year(Month) >= 1990) %>%
+  select(-Series_ID) %>%
+  mutate(MA_5 = slide_dbl(Employed, mean, .before = 2, .after = 2, .complete = TRUE))
+
+employment_long <- pivot_longer(employment_avg, c(Employed, MA_5), names_to = "category", values_to = "values")
+
+autoplot(employment_long, values) +
+  geom_line(aes(y=values, color = category))
+
+#autoplot(employment_avg, Employed) +
+ # geom_line(aes(y=MA_5))
+```
+
+From the plot above we see how the trend (light blue line) approximates the original data but does not take values as extreme as those in the original series. This is exactly the meaning of *smoothing* the time series.
+
+```{r, warning=FALSE}
+employment_avg <- us_employment %>%
+  filter(Title == "Retail Trade", year(Month) >= 1990) %>%
+  select(-Series_ID) %>%
+  mutate(MA_9 = slide_dbl(Employed, mean, .before = 4, .after = 4, .complete = TRUE))
+
+employment_long <- pivot_longer(employment_avg, c(Employed, MA_9), 
+                                names_to = "category", values_to = "values")
+
+autoplot(employment_long, values) +
+  geom_line(aes(y=values, color = category))
+```
+
+In the plot above we see the effect of using higher order moving averages. In the specific case, using a moving average with $m$ = 9 we see that the peaks and troughs of the moving average are much much smaller compared to those of the original time series. In fact those are even smaller than those of the moving average of order 5.
+
+## STL Decomposition
+
+As explained in @sec-trend and in @sec-seasonality every time series can be decomposed in its trend and seasonality components, along with a remainder component (i.e., the variability that is neither due to seasonality nor trend). Summing these components together, we get the original values of the starting time series.
+
+You can use different statistical tools to decompose a time series, but the STL decomposition is one of the most flexible methods to work with [additive decompositions](https://otexts.com/fpp3/components.html).
+
+::: {#nte-additive .callout-note}
+Even multiplicative decompositions can be turned into additive decompositions if the scale of the data is changed through a log transformation. This derives from the basic properties of logarithms. Specifically:
+
+$$
+\log(a*b) = \log(a) +\log(b)
+$$
+:::
+
+What presented in @nte-additive is a good justification of why the STL decomposition is so flexible.
+
+### STL in R
+
+```{r}
+retail_employment <- us_employment %>%
+  filter(Title == "Retail Trade")
+
+stl_model <- retail_employment %>%
+  model(STL(Employed~trend()+season(),
+            robust = TRUE))
+
+components(stl_model) %>%
+  autoplot()
+```
+
+Inside the trend() and season() parameters you can adjust the window argument but by default this will be set to a specific value based on the interval in the time series. To know more about default values refer to the [textbook](https://otexts.com/fpp3/stl.html).
+
+# Exercises
+
+## First
+
+```{r}
+gdp_pc <- global_economy %>%
+  mutate(GDP_PC = GDP / Population)
+
+autoplot(gdp_pc, GDP_PC) +
+  theme(legend.position = "none")
+```
+
+## Second
+
+### Global Economy
+
+```{r}
+us_gdp <- global_economy %>%
+  filter(Code == "USA")
+
+autoplot(us_gdp, GDP)
+```
+
+In this case, there is no need to transform the data due to the absence of seasonal patterns.
+
+### Livestock
+
+```{r}
+bbs <- aus_livestock %>%
+  filter(Animal == "Bulls, bullocks and steers")
+
+autoplot(bbs, Count) +
+  theme(legend.position = "none")
+```
+
+Given the difference in the interval at which the seasonal pattern emerges, it would be useful to use a box_cox transformation. First we estimate lambda using the Guerrero method.
+
+```{r}
+# Check the structure of lambda to ensure it contains the required columns
+lambda <- features(bbs, Count, features = guerrero)
+
+# Initialize transformed column in bbs
+bbs <- bbs %>% mutate(transformed = Count)
+
+# Loop through states and apply the transformation
+for (state in lambda$State) {
+  lambda_value <- filter(lambda, State == state) %>% pull(lambda_guerrero)
+  bbs <- bbs %>%
+    mutate(transformed = ifelse(State == state, box_cox(Count, lambda_value), transformed))
+}
+```
+
+```{r}
+autoplot(bbs, transformed) +
+  theme(legend.position = "none")
+```
+
+### Victoria Electricity Demand
+
+```{r}
+autoplot(vic_elec, Demand)
+```
+
+```{r}
+vic_elec %>%
+  filter(year(Time) == 2012, month(Time)==1) %>%
+  gg_season(Demand)
+```
+
+Overall, we can see that it would be useful to use a box cox transformation to make the seasonal variation approximately equal throughout the periods. We follow the usual steps.
+
+```{r}
+lambda <- features(vic_elec, Demand, features = guerrero)$lambda_guerrero
+#lambda is very close to 0, so close to a simple log transformation
+(vic_elec_transformed <- vic_elec %>%
+  mutate(transformed = box_cox(Demand, lambda)))
+```
+
+```{r}
+p1 <- vic_elec_transformed %>%
+  filter(year(Time) == 2012, month(Time) == 1) %>%
+  autoplot(transformed)
+
+p2 <- vic_elec_transformed %>%
+  filter(year(Time) == 2012, month(Time) == 1) %>%
+  autoplot(Demand)
+
+grid.arrange(p1,p2,nrow=2)
+```
+
+Having the data rescaled using box cox, does not help us solve the issue with different seasonality variations. So, contrary to what expected, the box cox transformation is useless in this case.
+
+### Gas production {#sec-gas-production}
+
+```{r}
+autoplot(aus_production, Gas)
+```
+
+We notice that the incidence of the seasonal variation increases by a lot throughout the years. Therefore, to try and make this variation approximately equal across years, we can use a box_cox transformation. We follow the usual steps.
+
+```{r}
+lambda <- features(aus_production, Gas, features = guerrero)$lambda_guerrero
+
+(transformed_aus_prod <- aus_production %>%
+  mutate(transformed = box_cox(Gas, lambda)))
+```
+
+Now we plot this and compare to the original data
+
+```{r}
+p1 <- autoplot(aus_production, Gas)
+p2 <- autoplot(transformed_aus_prod, transformed)
+
+grid.arrange(p1,p2,nrow=2)
+```
+
+We now see that the variation due to seasonality is approximately equal throughout the years, showing that the time series benefits from a box cox transformation.
+
+## Third
+
+```{r}
+autoplot(canadian_gas, Volume)
+```
+
+We notice that specifically throughout the time series there is a lot of noise during every years' end. Since the seasonal pattern that we are trying to smooth out is not evolving at a constant rate throughout the time series a box cox transformation would not help in this case. You can compare the plot above with the plot produced for @sec-gas-production to notice the differences.
+
+## Fourth
+
+Already answered in the 2nd Homework. Here is what was reported there.
+
+### Data visualization
+
+We just scratched the surface of what data visualization can do, so in Exercise 3 of HW2 we delve a little deeper into that.
+
+```{r}
+labour <- fma::labour
+
+dates <- seq.Date(from = as.Date("1978-02-01"), to = as.Date("1995-08-01"), by = "month")
+
+labour <- as.data.frame(labour)
+labour$date <- dates
+names(labour) <- c("labor_force", "month_year")
+
+labour <- labour %>%
+  mutate(month_year = yearmonth(month_year))
+
+(labour_ts <- as_tsibble(labour, index = month_year))
+```
+
+As usual, we import the dataset and perform the routine steps to organize it into a nice tsibble complete with a column for dates. Now, we are ready to produce some plots to explore some features of this time series.
+
+### Time Plot
+
+```{r}
+autoplot(labour_ts, .vars = labor_force) #time plot
+```
+
+You can plot a time plot very easily with `autoplot()`. This allows you to see trends in data.
+
+### Correlogram
+
+```{r}
+## correlogram
+autocorr <- ACF(labour_ts, labor_force)
+autoplot(autocorr) #huge autocorrelation across months
+```
+
+To compute a correlogram you follow these steps:
+
+1.  you estimate the auto correlation function with `ACF(dataset, name_of_column_in_dataset)` and assign it to a variable (autocorr in my example above)
+2.  then you pass that variable as an argument in `autoplot()` and that will do the trick.
+
+### Seasonality Plots
+
+They allow you to check for the presence of seasonality (trends based on time periods) in your data.
+
+```{r}
+## seasonality plot
+gg_season(labour_ts, labor_force) + 
+  labs(y = "Labor Force",
+       title = "Seasonal plot: Labor Force in AUS")
+```
+
+For these plots you use `gg_season()` and specify the dataset and the column to plot. You can add (literally with a + sign) other layers to your plot. In my example I added y labels and a title. If you learn this syntax you can be sure that you can use it on any other ggplot you'll ever do in your life.
+
+From this seasonal plot we learn that every year around December more people join the labor force.
+
+### Subseries Plots
+
+```{r}
+gg_subseries(labour_ts, labor_force) +
+  labs(y = "Labor Force",
+       title = "Subseries plot: Labor Force in AUS")
+```
+
+In these plots we can see how the series evolves across months in different years. The syntax is the same as the one for seasonality plots, except for the function `gg_subseries()` of course.
+
+```{r}
+hist(labour_ts$labor_force) #<1>
+```
+
+1.  the distribution appears to be bimodal, therefore a smoothing through box-cox would make sense
+
+```{r}
+qqnorm(y = labour_ts$labor_force)
+```
+
+```{r}
+lambda <- features(labour_ts, .var = labor_force, features = guerrero)$lambda_guerrero #<1>
+transformed_labforce <- box_cox(labour_ts$labor_force, lambda) #<2>
+
+labour_ts$transformed_labforce <- transformed_labforce #<3>
+labour_ts
+```
+
+1.  estimate the value of lambda using the Guerrero method through the `features()` extraction
+2.  perform the `box_cox()` transformation on the `labor_force` column of the data using the `lambda` estimated at point 1
+3.  create a new column in `labour_ts` called `transformed_labforce` which contains the values of the box_cox transformation
+
+```{r}
+hist(labour_ts$transformed_labforce) 
+#however the distribution remains highly bimodal and normality 
+#does not seem to be improved by much
+```
+
+For the last step of the exercise we compute again the Box-Cox transformation for this time series, but it does not do much to improve upon the normality of this specific time series.
+
+## Fifth
+
+### Tobacco
+
+```{r}
+lambda <- features(aus_production, Tobacco, features = guerrero)$lambda_guerrero
+
+(trasnformed_tob <- aus_production %>%
+  mutate(tob_transformed = box_cox(Tobacco, lambda)))
+```
+
+```{r}
+p1 <- autoplot(aus_production, Tobacco)
+p2 <- autoplot(trasnformed_tob, tob_transformed)
+
+grid.arrange(p1,p2,nrow=2)
+```
+
+### Ansett passengers
+
+```{r}
+filtered_ansett <- filter(ansett, Airports == "MEL-SYD", Class == "Economy")
+lambda <- features(filtered_ansett, Passengers, features = guerrero)$lambda_guerrero
+
+(transformed_pass <- filtered_ansett %>%
+  mutate(pass_transformed = box_cox(Passengers, lambda)))
+```
+
+```{r}
+p1 <- autoplot(filtered_ansett, Passengers)
+p2 <- autoplot(transformed_pass, pass_transformed)
+
+grid.arrange(p1,p2,nrow=2)
+```
+
+```{r}
+hist(transformed_pass$pass_transformed)
+shapiro.test(transformed_pass$pass_transformed)
+```
+
+```{r}
+hist(filtered_ansett$Passengers)
+shapiro.test(filtered_ansett$Passengers)
+```
+
+The box cox transformation seems to improve on the normality of the distribution of passengers but it fails to produce a non-significant result for the Shapiro-Wilk normality test. Therefore, the series remains not normally distributed and the distribution is not very useful.
+
+## Sixth
+
+This can be proven following the procedure described in the textbook under the ["Moving averages of moving averages" section](https://otexts.com/fpp3/moving-averages.html).
+
+## Seventh
+
+```{r}
+gas <- tail(aus_production, 5*4) |> select(Gas)
+autoplot(gas, Gas)
+```
+
+There are seasonal fluctuations and each year seems to exhibit the same pattern with a lower quantity in Q4 and Q1 followed by an increase in the other two quarters.
+
+```{r}
+dcmp <- model(gas, classical_decomposition(Gas, type = "multiplicative"))
+(cmp <- components(dcmp))
+```
+
+Looking at the seasonal component, we see that it is indeed lower in Q1 and Q4 and higher in the remaining quarters. These results support what observed through the visualization of the data.
+
+```{r}
+ggplot(cmp, aes(x=Quarter, y=season_adjust)) +
+  geom_line()
+```
+
+The seasonally adjusted time series is plotted above as it is already computed when the decomposition is applied. However, if one were to compute it by hand the process is simple. Since we want to get rid of the seasonal component, we divide the variable at time $t$ by the estimated seasonal component at that same time. By doing this, we obtain a seasonally adjusted time series. This follows by the way in which the multiplicative decomposition is specified.
+
+```{r}
+gas[5,1] <- 533
+
+cmp_gas <- components(model(.data = gas, classical_decomposition(Gas,"multiplicative")))
+
+ggplot(cmp_gas, aes(x=Quarter, y=season_adjust))+
+  geom_line()
+```
+
+When placing it in the middle, the outlier seems to not do too much harm to our seasonally adjusted time series
+
+```{r}
+gas <- tail(aus_production, 5*4) |> select(Gas)
+
+gas[dim(gas)[1], 1] <- 536
+
+cmp_gas <- components(model(.data = gas, classical_decomposition(Gas,"multiplicative")))
+
+ggplot(cmp_gas, aes(x=Quarter, y=season_adjust))+
+  geom_line()
+```
+
+However, we notice that when placing the outlier at the end of the time series we get a very strange result. Here are some explanations for why we observe this.
+
+**1. Influence on Seasonal Component Estimation**
+
+-   Seasonal adjustment methods, such as those based on **moving averages** or decomposition techniques (e.g., X-13ARIMA-SEATS, STL), estimate the seasonal pattern by averaging across multiple periods.
+
+-   An outlier at the end of the series can distort these averages, leading to an inaccurate estimation of the seasonal component. This affects how much of the observed value is attributed to seasonality versus the actual trend or irregular components.
+
+**2. Trend Distortion**
+
+-   Outliers can pull the estimated trend upwards or downwards, especially at the series’ boundary. This happens because smoothing methods used in trend extraction often struggle to properly differentiate between genuine trend changes and one-off anomalies.
+
+-   Since the seasonal adjustment process typically involves removing the trend before isolating seasonality, a distorted trend can lead to incorrect seasonally adjusted results.
+
+**3. Boundary Effects**
+
+-   Statistical smoothing methods (e.g., moving averages) are less reliable at the edges of a time series because they lack enough surrounding data for accurate calculations.
+
+-   If an outlier is present at the end of the series, the adjustment algorithms often “overreact” because they can’t use future data points to balance the smoothing. This results in exaggerated effects in the seasonally adjusted data near the boundary.
+
+**4. Irregular Component Interference**
+
+-   Seasonally adjusted results include both the trend and any irregular (non-seasonal, non-trend) fluctuations. An outlier is treated as part of the irregular component, but if not properly handled, it can introduce noise that disrupts the seasonal adjustment process, particularly when the irregular component becomes disproportionately large.
