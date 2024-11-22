@@ -1,0 +1,242 @@
+---
+title: "Chapter 5 Review"
+author: "Anthony Tricarico"
+link-citations: true
+number-sections: true
+
+mainfont: Times New Roman
+
+format:  
+  pdf:
+    toc: true                 # Adds a TOC for PDF as well
+    margin-top: 1.5cm         # Sets top margin for PDF
+    margin-left: 2cm          # Left margin for better readability
+    margin-right: 2cm         # Right margin for better readability
+    keep-tex: true            # Keeps the intermediate .tex file for debugging/adjustments
+    fig-align: center
+
+# Aesthetic options for code rendering
+code-block-style: github      # Styles code blocks similar to GitHub's appearance
+code-fold: true               # Allows readers to fold/unfold code blocks
+code-overflow: wrap           # Ensures code stays within margins
+page-layout: article          # Article layout keeps focus on content
+editor: visual
+---
+
+```{r setup, include = F}
+# Global options for R code chunks
+knitr::opts_chunk$set(fig.align = "center")
+```
+
+# Intro
+
+This is an explanation of the code used for chapter 5. This chapter of the textbook is focused on producing our first forecasts after fitting various models to our time series data. The models in this chapter are meant to be simple so that we can then use them as benchmark methods for more advanced models that will be developed in the next chapters.
+
+Also, this review will assume that you already know and have acquired basic familiarity with the functions explained up until the third chapter. Note that we will not cover all the mathematical aspects included in the book to keep these explanations simple enough, but of course if you feel like it you can just read through the chapter to understand what is really going on behind the scenes. Finally, if you did not cover basic topics in probability theory and hypothesis testing yet, this is the right moment to do so because we will use these concepts frequently in the following sections of this review and those concepts will be useful in the future (e.g., for your quantitative methods class).
+
+# Basic functions for Modeling and Forecasting
+
+This section is an overview of the most important functions that we will use to model our data and produce the first forecasts. First let's import the library that contains the functions we will use.
+
+```{r, results='hide'}
+library(fpp3)
+```
+
+## `TSLM()` {#sec-tslm}
+
+This function allows you to fit a linear model using the components of a time series (i.e., trend or seasonality).
+
+```{r}
+TSLM(GDP_per_capita ~ trend()) #<1>
+```
+
+1.  This is how you specify a formula, on the left of the \~ there is the dependent variable and on its right stands the independent variable (i.e., trend)
+
+In order to use this formula to fit a linear model you need to use the `model()` function.
+
+## `model()`
+
+This is how you use the model function to fit a model to your data:
+
+```{r}
+gdppc <- mutate(global_economy, "GDP_per_capita" = GDP / Population) #<1>
+
+(fit <- model(gdppc, trend_model = TSLM(GDP_per_capita ~ trend()))) #<2>
+```
+
+1.  create the `gdpcc` table by adding to the `global_economy` dataset a new column specifying the GDP per capita.
+2.  we fit the model using the `model()` function and assign its result to the `fit` variable. The result is shown above.
+
+with `model()` as with many other functions you used so far, you just need to specify where the data that are used in the model are contained (`gdppc` in our case) and the name of the column where you want to store the models produced by the formula we described in @sec-tslm . Notice that the name of the column or the formula you want to use for modeling will change based on the model that you want to specify.
+
+### `report()`
+
+This is used to get the results of the model you previously fit to the data.
+
+```{r}
+report(filter(fit,Country == 'Sweden')) # see output and evaluate
+```
+
+The code above reports the result only for Sweden since we filtered for its model among the many contained in `fit` as you can see from the previous output. Usually `report()` will only work for single models and if we try using the following we get a warning which prompts us to use `filter()` or `select()` to get the output we are looking for:
+
+```{r}
+report(fit)
+```
+
+## `forecast()`
+
+This is the function that we use to actually make forecasts after fitting a model to our data.
+
+```{r}
+forecast(fit, h = "3 years")
+```
+
+The arguments in the function is just the name of the model you previously declared and the number of periods you want to use in your forecast. In this case, we are saying that we want forecasts to be produced for three years ahead of the last one. Since, the `global_economy` dataset contains data up until 2017, the forecast will be for the three years after (2018, 2019, and 2020).
+
+We can now filter our forecasts to only get the forecast value for Sweden and plot our forecasts with the following code:
+
+```{r}
+fore <- filter(forecast(fit, h = "3 years"), Country == "Sweden") 
+
+autoplot(fore, gdppc) + 
+  labs(y = "$US",
+       title = "GDP per capita for Sweden") # color='black'
+```
+
+Notice that the plot also contains 80% and 95% confidence levels (or intervals) for your forecasts, as represented by the dark blue and light blue ranges, respectively.
+
+# Mean method
+
+The mean method of forecasting simply produces forecasts for future periods that are equal to the mean of the time series considered.
+
+```{r}
+recent_prod <- filter_index(aus_production, "1970 Q1" ~ "2004 Q4")
+bricks <- dplyr::select(recent_prod, Bricks)
+mean_fit <- model(bricks, MEAN(Bricks)) #<1>
+```
+
+1.  This is how you specify that you want to use the `MEAN()` method for forecasting. As its argument you pass in the name of the column for which you want to get the forecasts (`Bricks` in this case)
+
+```{r}
+tidy(mean_fit)  # extract output (1)
+```
+
+Using the `tidy()` function you can have a look at a brief report of the mean_fit model. You can see specifically that the estimate is equal to the mean of the time series considered. Also, you get the p-value which tells you about the significance of the model. Since the p-value is very close to 0, this model is statistically significant and we can use it to produce forecasts.
+
+```{r}
+results_list <- mean_fit$'MEAN(Bricks)'[[1]] # extract output (2)
+mean_results <- results_list$fit
+
+mean_fc <- forecast(mean_fit, h = 12)
+bricks_mean = mutate(bricks,hline=mean_fc$.mean[1]) # add a dashed line
+autoplot(mean_fc, bricks, level = NULL) +
+  autolayer(bricks_mean,hline,linetype='dashed',color='blue')
+```
+
+The lines of code above produce the plot that shows that the forecasts are indeed equal to the mean of the time series.
+
+# Naive method
+
+This method produces forecasts that are just equal to the last observed value in the time series.
+
+```{r}
+naive_fit <- model(bricks,NAIVE(Bricks)) #<1>
+```
+
+1.  Specify the `NAIVE()` model and fit it to the data
+
+```{r}
+naive_fc <- forecast(naive_fit, h = 12) #<1>
+```
+
+1.  Produce forecasts using the model specified
+
+```{r}
+autoplot(naive_fc, bricks, level = NULL)
+```
+
+The plot above just shows how the forecasts produced with this method are equal to the last value observed in the series.
+
+# Seasonal Naive
+
+This method is similar to the Naive method but produces forecasts in the future that are equal to the last seasonal trend observed in the data.
+
+```{r}
+snaive_fit <- model(bricks,SNAIVE(Bricks ~ lag("year"))) #<1>
+```
+
+1.  specify `SNAIVE()` model indicating that the seasonal trend is observed at a yearly interval
+
+```{r}
+snaive_fc <- forecast(snaive_fit, h = 12)
+```
+
+```{r}
+autoplot(snaive_fc, bricks, level = NULL) #<1>
+```
+
+1.  Here the `level` argument is set to `NULL` so that the plot does not contain forecast confidence intervals
+
+```{r}
+bricks %>%
+  filter_index("Q1 2004"~"Q4 2004") %>%
+  autoplot()
+```
+
+Notice that the yearly trend looks something like the plot above, which is exactly the shape that the future forecasts follow.
+
+# Drift method
+
+This method interpolates between the first and last observation and the line obtained is then "stretched" into future periods to produce forecasts.
+
+```{r}
+drift_fit <- model(bricks, RW(Bricks ~ drift()))
+drift_fc <- forecast(drift_fit, h = 12)
+autoplot(drift_fc, bricks, level = NULL)
+```
+
+To have a basic idea of how this works, we can convince ourselves that the line used in the forecast is actually the line going from the first to the last observation by looking at this plot.
+
+```{r}
+T <- length(bricks$Bricks) #getting length of Bricks column
+b <- (bricks$Bricks[T] - bricks$Bricks[1])/(T - 1) #equation of a line: slope (row140-row1)/(140-1)
+a <- bricks$Bricks[1] 
+y <- a + b * seq(1,T,by=1)
+
+DashDR <- tibble(y,Date=bricks$Quarter)
+DashDRts <- as_tsibble(DashDR,index=Date)
+
+autoplot(drift_fc, bricks, level = NULL)+
+  autolayer(DashDRts,y,color='blue',linetype='dashed')
+```
+
+Notice that T, b, a are used to compute the interpolated line and that this follows from the equation of a line of the form $y = mx + q$ where $m$ is the slope parameter (b in the code) and $q$ is the intercept (a in the code, which is just the first observation in the time series).
+
+# Train / Test Split
+
+To test how well our model performs we need to test in on data on which it was not trained. This is often done to prevent the problem of *overfitting* which refers to the fact that when a parameters of a model are estimated those perform well on the data that the model has already seen but performs poorly on new data (which is actually what should not happen). To mitigate this problem we divide our dataset into a *train* and a *test* portion.
+
+```{r}
+train <- filter_index(aus_production, "1992 Q1" ~ "2006 Q4") #<1>
+```
+
+1.  Our train dataset is made only of observations from 1992 to 2006.
+
+```{r}
+beer_fit <- model(train, Mean = MEAN(Beer), Naive = NAIVE(Beer),
+'Seasonal naive' = SNAIVE(Beer)) #<1>
+beer_fc <- forecast(beer_fit, h = 14) #<2>
+```
+
+1.  fit three different models using the MEAN, NAIVE, and SNAIVE methods
+2.  produce forecasts based on these three models
+
+```{r}
+autoplot(beer_fc, train, level = NULL) +
+  autolayer(filter_index(aus_production, "2007 Q1" ~ .),
+  colour = "black") + labs(y = "Megalitres", title = "Forecasts
+            for quarterly beer production") +
+  guides(colour = guide_legend(title = "Forecast"))
+```
+
+Now we can plot how well the three different models perform and we can see that the Seasonal Naive produces more accurate forecasts as it is closer to the original series (black line). Notice, that by the way they were constructed, the models did not see all the data in the series but they were trained only on data up to 2006. Nonetheless, the Seasonal Naive performs pretty well when it tries to make forecasts on data it did not see.
