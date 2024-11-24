@@ -633,13 +633,9 @@ plot does not contain forecast confidence intervals
 \begin{Highlighting}[]
 \NormalTok{bricks }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{filter\_index}\NormalTok{(}\StringTok{"Q1 2004"}\SpecialCharTok{\textasciitilde{}}\StringTok{"Q4 2004"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{autoplot}\NormalTok{()}
+  \FunctionTok{autoplot}\NormalTok{(}\AttributeTok{.vars =}\NormalTok{ Bricks)}
 \end{Highlighting}
 \end{Shaded}
-
-\begin{verbatim}
-Plot variable not specified, automatically selected `.vars = Bricks`
-\end{verbatim}
 
 \begin{center}
 \includegraphics{chapter5_review_files/figure-pdf/unnamed-chunk-17-1.pdf}
@@ -738,16 +734,12 @@ produce forecasts based on these three models
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{autoplot}\NormalTok{(beer\_fc, train, }\AttributeTok{level =} \ConstantTok{NULL}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{autolayer}\NormalTok{(}\FunctionTok{filter\_index}\NormalTok{(aus\_production, }\StringTok{"2007 Q1"} \SpecialCharTok{\textasciitilde{}}\NormalTok{ .),}
+  \FunctionTok{autolayer}\NormalTok{(}\FunctionTok{filter\_index}\NormalTok{(aus\_production, }\StringTok{"2007 Q1"} \SpecialCharTok{\textasciitilde{}}\NormalTok{ .), }\AttributeTok{.vars =}\NormalTok{ Beer,}
   \AttributeTok{colour =} \StringTok{"black"}\NormalTok{) }\SpecialCharTok{+} \FunctionTok{labs}\NormalTok{(}\AttributeTok{y =} \StringTok{"Megalitres"}\NormalTok{, }\AttributeTok{title =} \StringTok{"Forecasts}
 \StringTok{            for quarterly beer production"}\NormalTok{) }\SpecialCharTok{+}
   \FunctionTok{guides}\NormalTok{(}\AttributeTok{colour =} \FunctionTok{guide\_legend}\NormalTok{(}\AttributeTok{title =} \StringTok{"Forecast"}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
-
-\begin{verbatim}
-Plot variable not specified, automatically selected `.vars = Beer`
-\end{verbatim}
 
 \begin{center}
 \includegraphics{chapter5_review_files/figure-pdf/unnamed-chunk-22-1.pdf}
@@ -759,7 +751,302 @@ closer to the original series (black line). Notice, that by the way they
 were constructed, the models did not see all the data in the series but
 they were trained only on data up to 2006. Nonetheless, the Seasonal
 Naive performs pretty well when it tries to make forecasts on data it
-did not see.
+did not see. In a later section we will see how we can quantify how well
+a model performs.
+
+\subsection{More Examples}\label{more-examples}
+
+\phantomsection\label{annotated-cell-23}%
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{recent\_GOOG }\OtherTok{\textless{}{-}} \FunctionTok{filter}\NormalTok{(gafa\_stock, Symbol }\SpecialCharTok{==} \StringTok{"GOOG"}\NormalTok{,}
+                      \FunctionTok{year}\NormalTok{(Date) }\SpecialCharTok{\textgreater{}=} \DecValTok{2015}\NormalTok{)}
+
+\NormalTok{goog }\OtherTok{\textless{}{-}} \FunctionTok{mutate}\NormalTok{(recent\_GOOG, }\AttributeTok{day =} \FunctionTok{row\_number}\NormalTok{()) }\hspace*{\fill}\NormalTok{\circled{1}}
+
+\NormalTok{google\_stock }\OtherTok{\textless{}{-}} \FunctionTok{update\_tsibble}\NormalTok{(goog, }\AttributeTok{index =}\NormalTok{ day, }\AttributeTok{regular =} \ConstantTok{TRUE}\NormalTok{)}
+
+\NormalTok{google\_2015 }\OtherTok{\textless{}{-}} \FunctionTok{filter}\NormalTok{(google\_stock, }\FunctionTok{year}\NormalTok{(Date) }\SpecialCharTok{==} \DecValTok{2015}\NormalTok{) }\CommentTok{\# Filter the year of interest}
+
+\NormalTok{google\_fit }\OtherTok{\textless{}{-}} \FunctionTok{model}\NormalTok{(google\_2015, }\CommentTok{\# Fit the models}
+\AttributeTok{Mean =} \FunctionTok{MEAN}\NormalTok{(Close), }\AttributeTok{Naive =} \FunctionTok{NAIVE}\NormalTok{(Close),}
+\AttributeTok{Drift =} \FunctionTok{NAIVE}\NormalTok{(Close }\SpecialCharTok{\textasciitilde{}} \FunctionTok{drift}\NormalTok{()))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{description}
+\tightlist
+\item[\circled{1}]
+the \texttt{row\_number()} function adds a sequence of numbers
+representing the row number of each observation (basically a sequence,
+starts from 1 and ends with the last observation)
+\end{description}
+
+By now you should be able to see what's going on in these lines of code.
+We are filtering, mutating and updating the original tsibble to take as
+index the day column we just created before. The last three lines is
+where we fit models to data.
+
+\phantomsection\label{annotated-cell-24}%
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{google\_jan\_2016 }\OtherTok{\textless{}{-}} \FunctionTok{filter}\NormalTok{(google\_stock,}
+        \FunctionTok{yearmonth}\NormalTok{(Date) }\SpecialCharTok{==} \FunctionTok{yearmonth}\NormalTok{(}\StringTok{"2016 Jan"}\NormalTok{)) }\hspace*{\fill}\NormalTok{\circled{1}}
+
+\NormalTok{(google\_fc }\OtherTok{\textless{}{-}} \FunctionTok{forecast}\NormalTok{(google\_fit, }\AttributeTok{new\_data =}\NormalTok{ google\_jan\_2016)) }\hspace*{\fill}\NormalTok{\circled{2}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{description}
+\tightlist
+\item[\circled{1}]
+Produce forecasts for the trading days in January 2016
+\item[\circled{2}]
+the \texttt{new\_data} argument is used to specify for which datapoints
+the forecasts should be produced. In this example, we will be producing
+forecasts only for the trading days in Jan 2016
+\end{description}
+
+\begin{verbatim}
+# A fable: 57 x 11 [1]
+# Key:     Symbol, .model [3]
+   Symbol .model   day
+   <chr>  <chr>  <int>
+ 1 GOOG   Mean     253
+ 2 GOOG   Mean     254
+ 3 GOOG   Mean     255
+ 4 GOOG   Mean     256
+ 5 GOOG   Mean     257
+ 6 GOOG   Mean     258
+ 7 GOOG   Mean     259
+ 8 GOOG   Mean     260
+ 9 GOOG   Mean     261
+10 GOOG   Mean     262
+# i 47 more rows
+# i 8 more variables: Close <dist>, .mean <dbl>, Date <date>, Open <dbl>,
+#   High <dbl>, Low <dbl>, Adj_Close <dbl>, Volume <dbl>
+\end{verbatim}
+
+\phantomsection\label{annotated-cell-25}%
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{autoplot}\NormalTok{(google\_fc, google\_2015, }\AttributeTok{level =} \ConstantTok{NULL}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{autolayer}\NormalTok{(google\_jan\_2016, Close, }\AttributeTok{colour =} \StringTok{"black"}\NormalTok{) }\SpecialCharTok{+} \hspace*{\fill}\NormalTok{\circled{1}}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{y =} \StringTok{"$US"}\NormalTok{, }\AttributeTok{title =} \StringTok{"Google daily closing stock prices"}\NormalTok{,}
+       \AttributeTok{subtitle =} \StringTok{"(Jan 2015 {-} Jan 2016)"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{guides}\NormalTok{(}\AttributeTok{colour =} \FunctionTok{guide\_legend}\NormalTok{(}\AttributeTok{title =} \StringTok{"Forecast"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{description}
+\tightlist
+\item[\circled{1}]
+Remember that \texttt{autolayer()} just adds another layer to the plot
+produced with \texttt{autoplot()} instead of starting a new plot from a
+white, empty canvas.
+\end{description}
+
+\begin{center}
+\includegraphics{chapter5_review_files/figure-pdf/unnamed-chunk-25-1.pdf}
+\end{center}
+
+The plot just shows what each model predicts for the Jan 2016 period.
+
+\section{Residuals}\label{residuals}
+
+Residuals are the errors that our model makes when being tested.
+Basically, they represent the difference between the true observed value
+and what the model predicted that value to be. We now start with an
+example to understand how residuals fit in our discussion.
+
+\phantomsection\label{annotated-cell-26}%
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{beer\_fit1 }\OtherTok{\textless{}{-}} \FunctionTok{model}\NormalTok{(train, }\FunctionTok{SNAIVE}\NormalTok{(Beer))}
+\NormalTok{(mean\_fitted }\OtherTok{\textless{}{-}} \FunctionTok{augment}\NormalTok{(beer\_fit1)) }\hspace*{\fill}\NormalTok{\circled{1}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{description}
+\tightlist
+\item[\circled{1}]
+fitted values for a single method, along with residuals and innovation
+residuals
+\end{description}
+
+\begin{verbatim}
+# A tsibble: 60 x 6 [1Q]
+# Key:       .model [1]
+   .model       Quarter  Beer .fitted .resid .innov
+   <chr>          <qtr> <dbl>   <dbl>  <dbl>  <dbl>
+ 1 SNAIVE(Beer) 1992 Q1   443      NA     NA     NA
+ 2 SNAIVE(Beer) 1992 Q2   410      NA     NA     NA
+ 3 SNAIVE(Beer) 1992 Q3   420      NA     NA     NA
+ 4 SNAIVE(Beer) 1992 Q4   532      NA     NA     NA
+ 5 SNAIVE(Beer) 1993 Q1   433     443    -10    -10
+ 6 SNAIVE(Beer) 1993 Q2   421     410     11     11
+ 7 SNAIVE(Beer) 1993 Q3   410     420    -10    -10
+ 8 SNAIVE(Beer) 1993 Q4   512     532    -20    -20
+ 9 SNAIVE(Beer) 1994 Q1   449     433     16     16
+10 SNAIVE(Beer) 1994 Q2   381     421    -40    -40
+# i 50 more rows
+\end{verbatim}
+
+We saw how by using \texttt{augment()} on a model we previously fit to
+our data we can get some more information about how it performs. For
+instance, we can see that the .resid and .innovation column contain the
+residuals and the innovation residuals for each estimate provided by the
+model. The difference between residuals and innovation residuals is just
+that innovation residuals are more interpretable when dealing with data
+that has gone through transformations. However, since that was not the
+case with our example, we see that the residuals match perfectly with
+the innovation ones.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{ggplot}\NormalTok{(mean\_fitted, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ Quarter)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{y =}\NormalTok{ Beer),}\AttributeTok{color=}\StringTok{\textquotesingle{}black\textquotesingle{}}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_line}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{y =}\NormalTok{ .fitted),}\AttributeTok{color=}\StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{) }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+Warning: Removed 4 rows containing missing values or values outside the scale range
+(`geom_line()`).
+\end{verbatim}
+
+\begin{center}
+\includegraphics{chapter5_review_files/figure-pdf/unnamed-chunk-27-1.pdf}
+\end{center}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{autoplot}\NormalTok{(mean\_fitted,}\AttributeTok{.vars =}\NormalTok{ Beer) }\SpecialCharTok{+} \CommentTok{\# alternative command}
+  \FunctionTok{autolayer}\NormalTok{(mean\_fitted,.fitted,}\AttributeTok{color=}\StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+Warning: Removed 4 rows containing missing values or values outside the scale range
+(`geom_line()`).
+\end{verbatim}
+
+\begin{center}
+\includegraphics{chapter5_review_files/figure-pdf/unnamed-chunk-27-2.pdf}
+\end{center}
+
+In the plot we see that the predictions produced are very close to the
+actual series, meaning that the model performs well on the data.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{gg\_tsresiduals}\NormalTok{(beer\_fit1)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}
+\includegraphics{chapter5_review_files/figure-pdf/unnamed-chunk-28-1.pdf}
+\end{center}
+
+The \texttt{gg\_tsresiduals()} is a very useful function that allows you
+to check different assumptions that are imposed on residuals through
+plots. The usual assumption that are imposed on residuals is that they
+exhibit:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \href{https://en.wikipedia.org/wiki/Homoscedasticity_and_heteroscedasticity}{homoskedasticity}
+  (or exhibit no heteroskedasticity), meaning that there should be no
+  visible pattern in how residuals are distributed over time. This is
+  visible from the plot at the top.
+\item
+  no significant
+  \href{https://en.wikipedia.org/wiki/Autocorrelation}{autocorrelation},
+  this follows from the first assumption as autocorrelation would imply
+  a pattern in the time series that should be exploited but that our
+  model does not capture. You can check this assumption from the ACF
+  plot on the bottom left.
+\item
+  residuals are normally distributed, you can check this from the
+  histogram at the bottom right.
+\end{enumerate}
+
+\subsection{Assumptions on Residuals
+(continued)}\label{assumptions-on-residuals-continued}
+
+We continue the discussion here more in-depth.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{aug }\OtherTok{\textless{}{-}} \FunctionTok{augment}\NormalTok{(}\FunctionTok{model}\NormalTok{(google\_2015, }\FunctionTok{NAIVE}\NormalTok{(Close)))}
+\FunctionTok{autoplot}\NormalTok{(aug, .innov) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{y =} \StringTok{"$US"}\NormalTok{, }\AttributeTok{title =} \StringTok{"Residuals from the Naive method"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}
+\includegraphics{chapter5_review_files/figure-pdf/unnamed-chunk-29-1.pdf}
+\end{center}
+
+In the plot is a graphical representation of the residuals throughout
+the entire model we estimated using the NAIVE method.
+
+We can also check that the distribution of the residuals closely mirrors
+a normal distribution with the following lines of code
+
+\phantomsection\label{annotated-cell-31}%
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{p0 }\OtherTok{\textless{}{-}} \FunctionTok{ggplot}\NormalTok{(aug, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ .innov)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_histogram}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{y=}\FunctionTok{after\_stat}\NormalTok{(density)), }\AttributeTok{bins =} \DecValTok{20}\NormalTok{, }\hspace*{\fill}\NormalTok{\circled{1}}
+  \AttributeTok{color=}\StringTok{"black"}\NormalTok{, }\AttributeTok{fill=}\StringTok{"white"}\NormalTok{)}
+
+\NormalTok{p0 }\SpecialCharTok{+} \FunctionTok{stat\_function}\NormalTok{(}\AttributeTok{fun =}\NormalTok{ dnorm, }\AttributeTok{colour =} \StringTok{"red"}\NormalTok{, }\hspace*{\fill}\NormalTok{\circled{2}}
+  \AttributeTok{args =} \FunctionTok{list}\NormalTok{(}\AttributeTok{mean =} \FunctionTok{mean}\NormalTok{(aug}\SpecialCharTok{$}\NormalTok{.innov,}\AttributeTok{na.rm=}\ConstantTok{TRUE}\NormalTok{),}
+  \AttributeTok{sd =} \FunctionTok{sd}\NormalTok{(aug}\SpecialCharTok{$}\NormalTok{.innov,}\AttributeTok{na.rm=}\ConstantTok{TRUE}\NormalTok{)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{description}
+\tightlist
+\item[\circled{1}]
+The \texttt{after\_stat()} function used as a y \texttt{aesthetic}
+inside the \texttt{geom\_histogram()} layer of the ggplot, is used to
+specify that we want the \texttt{density} to be plotted on the y axis as
+opposed to the default behavior of the function which is to plot the
+\texttt{count}.
+\item[\circled{2}]
+The \texttt{stat\_function()} is used to add a layer which plots a
+probability distribution specified by the argument \texttt{fun}. In this
+case, we are plotting the density of the normal distribution
+(\texttt{dnorm()}) in red. Since it is another layer, it is superimposed
+to the histogram. Since each normal distribution is uniquely identified
+by a \texttt{mean} and a \texttt{standard\ deviation}, we need to pass
+these values inside the \texttt{dnorm()} function using the
+\texttt{args} argument as a \texttt{list}.
+\end{description}
+
+\begin{center}
+\includegraphics{chapter5_review_files/figure-pdf/unnamed-chunk-30-1.pdf}
+\end{center}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{autoplot}\NormalTok{(}\FunctionTok{ACF}\NormalTok{(aug, .innov)) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Residuals from the Naive method"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}
+\includegraphics{chapter5_review_files/figure-pdf/unnamed-chunk-31-1.pdf}
+\end{center}
+
+By computing the ACF we can also plot it and check for the presence of
+significant autocorrelation of residuals at different time lags.
+
+\subsection{Portmanteau Tests}\label{portmanteau-tests}
 
 
 

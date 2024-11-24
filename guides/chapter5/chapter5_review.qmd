@@ -180,7 +180,7 @@ autoplot(snaive_fc, bricks, level = NULL) #<1>
 ```{r}
 bricks %>%
   filter_index("Q1 2004"~"Q4 2004") %>%
-  autoplot()
+  autoplot(.vars = Bricks)
 ```
 
 Notice that the yearly trend looks something like the plot above, which is exactly the shape that the future forecasts follow.
@@ -233,10 +233,122 @@ beer_fc <- forecast(beer_fit, h = 14) #<2>
 
 ```{r}
 autoplot(beer_fc, train, level = NULL) +
-  autolayer(filter_index(aus_production, "2007 Q1" ~ .),
+  autolayer(filter_index(aus_production, "2007 Q1" ~ .), .vars = Beer,
   colour = "black") + labs(y = "Megalitres", title = "Forecasts
             for quarterly beer production") +
   guides(colour = guide_legend(title = "Forecast"))
 ```
 
-Now we can plot how well the three different models perform and we can see that the Seasonal Naive produces more accurate forecasts as it is closer to the original series (black line). Notice, that by the way they were constructed, the models did not see all the data in the series but they were trained only on data up to 2006. Nonetheless, the Seasonal Naive performs pretty well when it tries to make forecasts on data it did not see.
+Now we can plot how well the three different models perform and we can see that the Seasonal Naive produces more accurate forecasts as it is closer to the original series (black line). Notice, that by the way they were constructed, the models did not see all the data in the series but they were trained only on data up to 2006. Nonetheless, the Seasonal Naive performs pretty well when it tries to make forecasts on data it did not see. In a later section we will see how we can quantify how well a model performs.
+
+## More Examples
+
+```{r}
+recent_GOOG <- filter(gafa_stock, Symbol == "GOOG",
+                      year(Date) >= 2015)
+
+goog <- mutate(recent_GOOG, day = row_number()) #<1>
+
+google_stock <- update_tsibble(goog, index = day, regular = TRUE)
+
+google_2015 <- filter(google_stock, year(Date) == 2015) # Filter the year of interest
+
+google_fit <- model(google_2015, # Fit the models
+Mean = MEAN(Close), Naive = NAIVE(Close),
+Drift = NAIVE(Close ~ drift()))
+```
+
+1.  the `row_number()` function adds a sequence of numbers representing the row number of each observation (basically a sequence, starts from 1 and ends with the last observation)
+
+By now you should be able to see what's going on in these lines of code. We are filtering, mutating and updating the original tsibble to take as index the day column we just created before. The last three lines is where we fit models to data.
+
+```{r}
+google_jan_2016 <- filter(google_stock,
+        yearmonth(Date) == yearmonth("2016 Jan")) #<1>
+
+(google_fc <- forecast(google_fit, new_data = google_jan_2016)) #<2>
+```
+
+1.  Produce forecasts for the trading days in January 2016
+2.  the `new_data` argument is used to specify for which datapoints the forecasts should be produced. In this example, we will be producing forecasts only for the trading days in Jan 2016
+
+```{r}
+autoplot(google_fc, google_2015, level = NULL) +
+  autolayer(google_jan_2016, Close, colour = "black") + #<1>
+  labs(y = "$US", title = "Google daily closing stock prices",
+       subtitle = "(Jan 2015 - Jan 2016)") +
+  guides(colour = guide_legend(title = "Forecast"))
+```
+
+1.  Remember that `autolayer()` just adds another layer to the plot produced with `autoplot()` instead of starting a new plot from a white, empty canvas.
+
+The plot just shows what each model predicts for the Jan 2016 period.
+
+# Residuals
+
+Residuals are the errors that our model makes when being tested. Basically, they represent the difference between the true observed value and what the model predicted that value to be. We now start with an example to understand how residuals fit in our discussion.
+
+```{r}
+beer_fit1 <- model(train, SNAIVE(Beer))
+(mean_fitted <- augment(beer_fit1)) #<1>
+```
+
+1.  fitted values for a single method, along with residuals and innovation residuals
+
+We saw how by using `augment()` on a model we previously fit to our data we can get some more information about how it performs. For instance, we can see that the .resid and .innovation column contain the residuals and the innovation residuals for each estimate provided by the model. The difference between residuals and innovation residuals is just that innovation residuals are more interpretable when dealing with data that has gone through transformations. However, since that was not the case with our example, we see that the residuals match perfectly with the innovation ones.
+
+```{r}
+ggplot(mean_fitted, aes(x = Quarter)) +
+  geom_line(aes(y = Beer),color='black') +
+  geom_line(aes(y = .fitted),color='red') 
+autoplot(mean_fitted,.vars = Beer) + # alternative command
+  autolayer(mean_fitted,.fitted,color='red')
+```
+
+In the plot we see that the predictions produced are very close to the actual series, meaning that the model performs well on the data.
+
+```{r, warning=FALSE}
+gg_tsresiduals(beer_fit1)
+```
+
+The `gg_tsresiduals()` is a very useful function that allows you to check different assumptions that are imposed on residuals through plots. The usual assumption that are imposed on residuals is that they exhibit:
+
+1.  [homoskedasticity](https://en.wikipedia.org/wiki/Homoscedasticity_and_heteroscedasticity) (or exhibit no heteroskedasticity), meaning that there should be no visible pattern in how residuals are distributed over time. This is visible from the plot at the top.
+2.  no significant [autocorrelation](https://en.wikipedia.org/wiki/Autocorrelation), this follows from the first assumption as autocorrelation would imply a pattern in the time series that should be exploited but that our model does not capture. You can check this assumption from the ACF plot on the bottom left.
+3.  residuals are normally distributed, you can check this from the histogram at the bottom right.
+
+## Assumptions on Residuals (continued)
+
+We continue the discussion here more in-depth.
+
+```{r, warning=FALSE}
+aug <- augment(model(google_2015, NAIVE(Close)))
+autoplot(aug, .innov) +
+  labs(y = "$US", title = "Residuals from the Naive method")
+```
+
+In the plot is a graphical representation of the residuals throughout the entire model we estimated using the NAIVE method.
+
+We can also check that the distribution of the residuals closely mirrors a normal distribution with the following lines of code
+
+```{r, warning=FALSE}
+p0 <- ggplot(aug, aes(x = .innov)) +
+  geom_histogram(aes(y=after_stat(density)), bins = 20, #<1>
+  color="black", fill="white")
+
+p0 + stat_function(fun = dnorm, colour = "red", #<2>
+  args = list(mean = mean(aug$.innov,na.rm=TRUE),
+  sd = sd(aug$.innov,na.rm=TRUE)))
+```
+
+1.  The `after_stat()` function used as a y `aesthetic` inside the `geom_histogram()` layer of the ggplot, is used to specify that we want the `density` to be plotted on the y axis as opposed to the default behavior of the function which is to plot the `count`.
+2.  The `stat_function()` is used to add a layer which plots a probability distribution specified by the argument `fun`. In this case, we are plotting the density of the normal distribution (`dnorm()`) in red. Since it is another layer, it is superimposed to the histogram. Since each normal distribution is uniquely identified by a `mean` and a `standard deviation`, we need to pass these values inside the `dnorm()` function using the `args` argument as a `list`.
+
+```{r}
+autoplot(ACF(aug, .innov)) +
+  labs(title = "Residuals from the Naive method")
+```
+
+By computing the ACF we can also plot it and check for the presence of significant autocorrelation of residuals at different time lags.
+
+## Portmanteau Tests
