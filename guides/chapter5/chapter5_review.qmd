@@ -38,7 +38,7 @@ Also, this review will assume that you already know and have acquired basic fami
 
 This section is an overview of the most important functions that we will use to model our data and produce the first forecasts. First let's import the library that contains the functions we will use.
 
-```{r, results='hide'}
+```{r, results='hide', warning=FALSE}
 library(fpp3)
 ```
 
@@ -352,3 +352,194 @@ autoplot(ACF(aug, .innov)) +
 By computing the ACF we can also plot it and check for the presence of significant autocorrelation of residuals at different time lags.
 
 ## Portmanteau Tests
+
+These kinds of test are used when we want to assess the level of autocorrelation in a time series across a number $k$ of lags, where $k \in \mathbb{N}$ (i.e., notation for saying that $k$ is a [natural number](https://www.cuemath.com/numbers/natural-numbers/)). There are two main tests that your book discusses.
+
+### Box-Pierce Test
+
+```{r}
+features(aug, .innov, box_pierce, lag = 10)
+```
+
+With this we compute the Box-Pierce statistic on the data and obtain its related p-value. Generally a p-value greater than 0.1 will be a good way of assessing that the residuals are randomly distributed and that there is no significant pattern arising from their actual distribution.
+
+### Ljung-Box Test
+
+```{r}
+features(aug, .innov, ljung_box, lag = 10)
+```
+
+Another approach is using the Ljung-Box test. It has been shown that the two tests yield comparable results, however, this test has been shown to be more precise overall so it is recommended that you use this one from now on. Remember that to use the `features()` function you need to specify the augmented model fit (aug in the example), select the .innov column containing the innovation residuals, and then specify that you want to compute the ljung_box statistic with a lag of 10 (due to the data being non-seasonal in this case).
+
+::: callout-important
+The book suggests using ℓ=10 (i.e., `lag = 10`) for non-seasonal data and ℓ=2m for seasonal data, where m is the period of seasonality. However, the test is not good when ℓ is large, so if these values are larger than T/5, then use ℓ=T/5. T in this case refers to the total number of observations that you are using to carry out the test (i.e., number of rows in your dataset).
+:::
+
+#### More examples
+
+We can now use this method to check if the residuals produced by other models present patterns or are auto-correlated.
+
+```{r}
+fit <- model(google_2015, RW(Close ~ drift()))
+tidy(fit) #<1>
+```
+
+1.  remember that the estimate obtained using the drift method is $\frac{(y_T-y_1)}{(T-1)}$ = (759-522)/251 = 0.9439931
+
+```{r}
+features(augment(fit), .innov, ljung_box, lag=10)
+```
+
+then we compute the Ljung Box statistic and see that the p-value is \> .1 and therefore we can assume that residuals are randomly distributed (no pattern)
+
+```{r}
+hilo(forecast(model(google_2015, NAIVE(Close)), h = 10))
+```
+
+Finally we use the `hilo()` function to extract confidence (prediction) intervals for each prediction obtained from a NAIVE model.
+
+## Bootstrapped residuals
+
+We can use our model to generate more observations. These observations would be generated based on what has been observed in previous periods, but they would still vary. In this case, we are building a simulation to test our model on multiple different future possibilities. The method that is used to obtain new random observations starting from a sample is called **bootstrap**.
+
+To generate these bootstrapped residuals we can use the `generate()` function in R. Alternatively, we could also just set the `bootstrap` argument in the `forecast()` to `TRUE` and specify how many `times` we want to run the bootstrap simulation.
+
+```{r}
+(fore <- forecast(model(google_2015, NAIVE(Close)), h = 10,
+        bootstrap = TRUE, times = 1000)) #<1>
+```
+
+1.  This specifies that the bootstrapping process will perform 1000 simulations. Each simulation generates a possible future path for the time series. These simulations are then aggregated to produce the final forecast distribution.
+
+Finally we take a look at the final forecast distribution along with the prediction intervals
+
+```{r}
+hilo(fore)
+```
+
+# Final lines of code
+
+## More examples on model fitting and diagnosis of residuals
+
+```{r}
+us_retail_employment <- filter(us_employment, year(Month) >= 1990,
+                        Title == "Retail Trade") #<1>
+
+US_model_0 <- model(us_retail_employment,
+              STL(Employed ~ trend(window = 7), robust = TRUE)) #<2>
+```
+
+1.  filter the dataset
+2.  specify the model formula using an STL-based decomposition using only the trend component
+
+```{r}
+US_model_1 <- select(components(US_model_0), -.model) #<1>
+
+(US_fore <- forecast(model(US_model_1, NAIVE(season_adjust)))) #<2>
+```
+
+1.  get rid of the `.model` column
+2.  produce forecasts using the NAIVE method on the seasonally adjusted series
+
+Finally, we plot the results from our model which is based on seasonally adjusted data.
+
+```{r}
+autoplot(US_fore, US_model_1) +
+  labs(y = "Number of people", title = "US retail employment")
+```
+
+Another similar example follows below.
+
+```{r}
+fit_dcmp <- model(us_retail_employment,
+    stlf = decomposition_model(STL(Employed ~ trend(window = 7),
+          robust = TRUE), NAIVE(season_adjust)))
+```
+
+We start from the decomposing the model using an STL decomposition as before and then we fit a NAIVE model to the seasonally adjusted time series. We then plot the results.
+
+```{r}
+autoplot(forecast(fit_dcmp), us_retail_employment) +
+  labs(y = "Number of people", title = "Monthly US retail employment")
+```
+
+We can also plot the residuals of the model by using:
+
+```{r, warning=F}
+gg_tsresiduals(fit_dcmp)
+```
+
+From here we notice some patterns in how those are distributed and the autocorrelation at different time lags. We now want to compute the mean of the innovation residuals.
+
+```{r}
+features(augment(fit_dcmp), .innov, list(avg = ~ mean(.,na.rm=TRUE)))
+```
+
+A simpler way to get the mean of the residuals **when you only estimate one model** is shown below.
+
+```{r}
+mean(augment(fit_dcmp)$.innov, na.rm=TRUE)
+```
+
+## Subsetting
+
+Subsetting refers to extracting only some rows in a dataset. Subsetting is usually a synonym of filtering the data and this is also shown in code. Here is an example:
+
+```{r}
+filter(aus_production, year(Quarter) >= 1995) #<1>
+```
+
+1.  only get the rows where the year of the observation is greater than or equal to 1995
+
+In case you do not have a specific filtering condition to use, you can use slice to get a subset of your data.
+
+```{r}
+slice(aus_production, n()-19:0) #<1>
+```
+
+1.  last 20 observations obtained using the `n()` function which returns the total number of rows (n) in the aus_production dataset. Then the slice only selects the rows from n-19 to the end.
+
+```{r}
+slice(group_by(aus_retail, State, Industry), 1:12) # working with groups
+```
+
+## Forecast errors
+
+```{r}
+recent_production <- filter(aus_production, year(Quarter) >= 1992) #<1>
+
+beer_train <- filter(recent_production, year(Quarter) <= 2007) #<2>
+```
+
+1.  get rows where year is after 1992 (included)
+2.  train / test split
+
+```{r}
+beer_fit <- model(beer_train, Mean = MEAN(Beer),
+    Naive = NAIVE(Beer),
+    'Seasonal naive' = SNAIVE(Beer),
+    Drift = RW(Beer ~ drift()))
+```
+
+Fit three models to our training dataset. Finally, produce forecasts using our model.
+
+```{r}
+(beer_fc <- forecast(beer_fit, h = 10))
+```
+
+And plot the forecasts without plotting the prediction intervals (i.e., `level = NULL`).
+
+```{r}
+autoplot(beer_fc, recent_production, level = NULL) +
+  labs(y = "Megalitres", title = "Forecasts for quarterly beer production") +
+  guides(colour = guide_legend(title = "Forecast"))
+```
+
+Finally, we evaluate the performance of our model by producing an accuracy table.
+
+```{r}
+accTable <- accuracy(beer_fc, recent_production)
+select(accTable,.model,RMSE,MAE,MAPE)
+```
+
+This allows us to get the main accuracy measures for the different models fit to the data. From the table we see that the Seasonal naive model scores the lowest on the error metrics, and therefore is the best model among those proposed.

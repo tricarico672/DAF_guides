@@ -136,6 +136,22 @@
 
 \KOMAoption{captions}{tableheading}
 \makeatletter
+\@ifpackageloaded{tcolorbox}{}{\usepackage[skins,breakable]{tcolorbox}}
+\@ifpackageloaded{fontawesome5}{}{\usepackage{fontawesome5}}
+\definecolor{quarto-callout-color}{HTML}{909090}
+\definecolor{quarto-callout-note-color}{HTML}{0758E5}
+\definecolor{quarto-callout-important-color}{HTML}{CC1914}
+\definecolor{quarto-callout-warning-color}{HTML}{EB9113}
+\definecolor{quarto-callout-tip-color}{HTML}{00A047}
+\definecolor{quarto-callout-caution-color}{HTML}{FC5300}
+\definecolor{quarto-callout-color-frame}{HTML}{acacac}
+\definecolor{quarto-callout-note-color-frame}{HTML}{4582ec}
+\definecolor{quarto-callout-important-color-frame}{HTML}{d9534f}
+\definecolor{quarto-callout-warning-color-frame}{HTML}{f0ad4e}
+\definecolor{quarto-callout-tip-color-frame}{HTML}{02b875}
+\definecolor{quarto-callout-caution-color-frame}{HTML}{fd7e14}
+\makeatother
+\makeatletter
 \@ifpackageloaded{caption}{}{\usepackage{caption}}
 \AtBeginDocument{%
 \ifdefined\contentsname
@@ -1047,6 +1063,559 @@ By computing the ACF we can also plot it and check for the presence of
 significant autocorrelation of residuals at different time lags.
 
 \subsection{Portmanteau Tests}\label{portmanteau-tests}
+
+These kinds of test are used when we want to assess the level of
+autocorrelation in a time series across a number \(k\) of lags, where
+\(k \in \mathbb{N}\) (i.e., notation for saying that \(k\) is a
+\href{https://www.cuemath.com/numbers/natural-numbers/}{natural
+number}). There are two main tests that your book discusses.
+
+\subsubsection{Box-Pierce Test}\label{box-pierce-test}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{features}\NormalTok{(aug, .innov, box\_pierce, }\AttributeTok{lag =} \DecValTok{10}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+# A tibble: 1 x 4
+  Symbol .model       bp_stat bp_pvalue
+  <chr>  <chr>          <dbl>     <dbl>
+1 GOOG   NAIVE(Close)    7.74     0.654
+\end{verbatim}
+
+With this we compute the Box-Pierce statistic on the data and obtain its
+related p-value. Generally a p-value greater than 0.1 will be a good way
+of assessing that the residuals are randomly distributed and that there
+is no significant pattern arising from their actual distribution.
+
+\subsubsection{Ljung-Box Test}\label{ljung-box-test}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{features}\NormalTok{(aug, .innov, ljung\_box, }\AttributeTok{lag =} \DecValTok{10}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+# A tibble: 1 x 4
+  Symbol .model       lb_stat lb_pvalue
+  <chr>  <chr>          <dbl>     <dbl>
+1 GOOG   NAIVE(Close)    7.91     0.637
+\end{verbatim}
+
+Another approach is using the Ljung-Box test. It has been shown that the
+two tests yield comparable results, however, this test has been shown to
+be more precise overall so it is recommended that you use this one from
+now on. Remember that to use the \texttt{features()} function you need
+to specify the augmented model fit (aug in the example), select the
+.innov column containing the innovation residuals, and then specify that
+you want to compute the ljung\_box statistic with a lag of 10 (due to
+the data being non-seasonal in this case).
+
+\begin{tcolorbox}[enhanced jigsaw, bottomrule=.15mm, colframe=quarto-callout-important-color-frame, toptitle=1mm, breakable, colback=white, left=2mm, arc=.35mm, coltitle=black, opacitybacktitle=0.6, leftrule=.75mm, opacityback=0, rightrule=.15mm, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, colbacktitle=quarto-callout-important-color!10!white, bottomtitle=1mm, titlerule=0mm, toprule=.15mm]
+
+The book suggests using ℓ=10 (i.e., \texttt{lag\ =\ 10}) for
+non-seasonal data and ℓ=2m for seasonal data, where m is the period of
+seasonality. However, the test is not good when ℓ is large, so if these
+values are larger than T/5, then use ℓ=T/5. T in this case refers to the
+total number of observations that you are using to carry out the test
+(i.e., number of rows in your dataset).
+
+\end{tcolorbox}
+
+\paragraph{More examples}\label{more-examples-1}
+
+We can now use this method to check if the residuals produced by other
+models present patterns or are auto-correlated.
+
+\phantomsection\label{annotated-cell-35}%
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fit }\OtherTok{\textless{}{-}} \FunctionTok{model}\NormalTok{(google\_2015, }\FunctionTok{RW}\NormalTok{(Close }\SpecialCharTok{\textasciitilde{}} \FunctionTok{drift}\NormalTok{()))}
+\FunctionTok{tidy}\NormalTok{(fit) }\hspace*{\fill}\NormalTok{\circled{1}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{description}
+\tightlist
+\item[\circled{1}]
+remember that the estimate obtained using the drift method is
+\(\frac{(y_T-y_1)}{(T-1)}\) = (759-522)/251 = 0.9439931
+\end{description}
+
+\begin{verbatim}
+# A tibble: 1 x 7
+  Symbol .model              term  estimate std.error statistic p.value
+  <chr>  <chr>               <chr>    <dbl>     <dbl>     <dbl>   <dbl>
+1 GOOG   RW(Close ~ drift()) b        0.944     0.705      1.34   0.182
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{features}\NormalTok{(}\FunctionTok{augment}\NormalTok{(fit), .innov, ljung\_box, }\AttributeTok{lag=}\DecValTok{10}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+# A tibble: 1 x 4
+  Symbol .model              lb_stat lb_pvalue
+  <chr>  <chr>                 <dbl>     <dbl>
+1 GOOG   RW(Close ~ drift())    7.91     0.637
+\end{verbatim}
+
+then we compute the Ljung Box statistic and see that the p-value is
+\textgreater{} .1 and therefore we can assume that residuals are
+randomly distributed (no pattern)
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{hilo}\NormalTok{(}\FunctionTok{forecast}\NormalTok{(}\FunctionTok{model}\NormalTok{(google\_2015, }\FunctionTok{NAIVE}\NormalTok{(Close)), }\AttributeTok{h =} \DecValTok{10}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+# A tsibble: 10 x 7 [1]
+# Key:       Symbol, .model [1]
+   Symbol .model         day
+   <chr>  <chr>        <dbl>
+ 1 GOOG   NAIVE(Close)   253
+ 2 GOOG   NAIVE(Close)   254
+ 3 GOOG   NAIVE(Close)   255
+ 4 GOOG   NAIVE(Close)   256
+ 5 GOOG   NAIVE(Close)   257
+ 6 GOOG   NAIVE(Close)   258
+ 7 GOOG   NAIVE(Close)   259
+ 8 GOOG   NAIVE(Close)   260
+ 9 GOOG   NAIVE(Close)   261
+10 GOOG   NAIVE(Close)   262
+# i 4 more variables: Close <dist>, .mean <dbl>, `80%` <hilo>, `95%` <hilo>
+\end{verbatim}
+
+Finally we use the \texttt{hilo()} function to extract confidence
+(prediction) intervals for each prediction obtained from a NAIVE model.
+
+\subsection{Bootstrapped residuals}\label{bootstrapped-residuals}
+
+We can use our model to generate more observations. These observations
+would be generated based on what has been observed in previous periods,
+but they would still vary. In this case, we are building a simulation to
+test our model on multiple different future possibilities. The method
+that is used to obtain new random observations starting from a sample is
+called \textbf{bootstrap}.
+
+To generate these bootstrapped residuals we can use the
+\texttt{generate()} function in R. Alternatively, we could also just set
+the \texttt{bootstrap} argument in the \texttt{forecast()} to
+\texttt{TRUE} and specify how many \texttt{times} we want to run the
+bootstrap simulation.
+
+\phantomsection\label{annotated-cell-38}%
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{(fore }\OtherTok{\textless{}{-}} \FunctionTok{forecast}\NormalTok{(}\FunctionTok{model}\NormalTok{(google\_2015, }\FunctionTok{NAIVE}\NormalTok{(Close)), }\AttributeTok{h =} \DecValTok{10}\NormalTok{,}
+        \AttributeTok{bootstrap =} \ConstantTok{TRUE}\NormalTok{, }\AttributeTok{times =} \DecValTok{1000}\NormalTok{)) }\hspace*{\fill}\NormalTok{\circled{1}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{description}
+\tightlist
+\item[\circled{1}]
+This specifies that the bootstrapping process will perform 1000
+simulations. Each simulation generates a possible future path for the
+time series. These simulations are then aggregated to produce the final
+forecast distribution.
+\end{description}
+
+\begin{verbatim}
+# A fable: 10 x 5 [1]
+# Key:     Symbol, .model [1]
+   Symbol .model         day        Close .mean
+   <chr>  <chr>        <dbl>       <dist> <dbl>
+ 1 GOOG   NAIVE(Close)   253 sample[1000]  759.
+ 2 GOOG   NAIVE(Close)   254 sample[1000]  759.
+ 3 GOOG   NAIVE(Close)   255 sample[1000]  759.
+ 4 GOOG   NAIVE(Close)   256 sample[1000]  759.
+ 5 GOOG   NAIVE(Close)   257 sample[1000]  759.
+ 6 GOOG   NAIVE(Close)   258 sample[1000]  760.
+ 7 GOOG   NAIVE(Close)   259 sample[1000]  759.
+ 8 GOOG   NAIVE(Close)   260 sample[1000]  760.
+ 9 GOOG   NAIVE(Close)   261 sample[1000]  760.
+10 GOOG   NAIVE(Close)   262 sample[1000]  760.
+\end{verbatim}
+
+Finally we take a look at the final forecast distribution along with the
+prediction intervals
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{hilo}\NormalTok{(fore)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+# A tsibble: 10 x 7 [1]
+# Key:       Symbol, .model [1]
+   Symbol .model         day        Close .mean                  `80%`
+   <chr>  <chr>        <dbl>       <dist> <dbl>                 <hilo>
+ 1 GOOG   NAIVE(Close)   253 sample[1000]  759. [747.8160, 771.8960]80
+ 2 GOOG   NAIVE(Close)   254 sample[1000]  759. [742.1871, 774.8240]80
+ 3 GOOG   NAIVE(Close)   255 sample[1000]  759. [738.6650, 779.4271]80
+ 4 GOOG   NAIVE(Close)   256 sample[1000]  759. [735.5861, 781.8397]80
+ 5 GOOG   NAIVE(Close)   257 sample[1000]  759. [731.5328, 787.0748]80
+ 6 GOOG   NAIVE(Close)   258 sample[1000]  760. [730.2786, 791.5545]80
+ 7 GOOG   NAIVE(Close)   259 sample[1000]  759. [727.1139, 795.2611]80
+ 8 GOOG   NAIVE(Close)   260 sample[1000]  760. [724.4122, 797.9961]80
+ 9 GOOG   NAIVE(Close)   261 sample[1000]  760. [721.9938, 801.4880]80
+10 GOOG   NAIVE(Close)   262 sample[1000]  760. [719.6038, 804.1328]80
+# i 1 more variable: `95%` <hilo>
+\end{verbatim}
+
+\section{Final lines of code}\label{final-lines-of-code}
+
+\subsection{More examples on model fitting and diagnosis of
+residuals}\label{more-examples-on-model-fitting-and-diagnosis-of-residuals}
+
+\phantomsection\label{annotated-cell-40}%
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{us\_retail\_employment }\OtherTok{\textless{}{-}} \FunctionTok{filter}\NormalTok{(us\_employment, }\FunctionTok{year}\NormalTok{(Month) }\SpecialCharTok{\textgreater{}=} \DecValTok{1990}\NormalTok{,}
+\NormalTok{                        Title }\SpecialCharTok{==} \StringTok{"Retail Trade"}\NormalTok{) }\hspace*{\fill}\NormalTok{\circled{1}}
+
+\NormalTok{US\_model\_0 }\OtherTok{\textless{}{-}} \FunctionTok{model}\NormalTok{(us\_retail\_employment,}
+              \FunctionTok{STL}\NormalTok{(Employed }\SpecialCharTok{\textasciitilde{}} \FunctionTok{trend}\NormalTok{(}\AttributeTok{window =} \DecValTok{7}\NormalTok{), }\AttributeTok{robust =} \ConstantTok{TRUE}\NormalTok{)) }\hspace*{\fill}\NormalTok{\circled{2}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{description}
+\tightlist
+\item[\circled{1}]
+filter the dataset
+\item[\circled{2}]
+specify the model formula using an STL-based decomposition using only
+the trend component
+\end{description}
+
+\phantomsection\label{annotated-cell-41}%
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{US\_model\_1 }\OtherTok{\textless{}{-}} \FunctionTok{select}\NormalTok{(}\FunctionTok{components}\NormalTok{(US\_model\_0), }\SpecialCharTok{{-}}\NormalTok{.model) }\hspace*{\fill}\NormalTok{\circled{1}}
+
+\NormalTok{(US\_fore }\OtherTok{\textless{}{-}} \FunctionTok{forecast}\NormalTok{(}\FunctionTok{model}\NormalTok{(US\_model\_1, }\FunctionTok{NAIVE}\NormalTok{(season\_adjust)))) }\hspace*{\fill}\NormalTok{\circled{2}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{description}
+\tightlist
+\item[\circled{1}]
+get rid of the \texttt{.model} column
+\item[\circled{2}]
+produce forecasts using the NAIVE method on the seasonally adjusted
+series
+\end{description}
+
+\begin{verbatim}
+# A fable: 24 x 5 [1M]
+# Key:     Series_ID, .model [1]
+   Series_ID     .model                  Month
+   <chr>         <chr>                   <mth>
+ 1 CEU4200000001 NAIVE(season_adjust) 2019 Oct
+ 2 CEU4200000001 NAIVE(season_adjust) 2019 Nov
+ 3 CEU4200000001 NAIVE(season_adjust) 2019 Dec
+ 4 CEU4200000001 NAIVE(season_adjust) 2020 Jan
+ 5 CEU4200000001 NAIVE(season_adjust) 2020 Feb
+ 6 CEU4200000001 NAIVE(season_adjust) 2020 Mar
+ 7 CEU4200000001 NAIVE(season_adjust) 2020 Apr
+ 8 CEU4200000001 NAIVE(season_adjust) 2020 May
+ 9 CEU4200000001 NAIVE(season_adjust) 2020 Jun
+10 CEU4200000001 NAIVE(season_adjust) 2020 Jul
+# i 14 more rows
+# i 2 more variables: season_adjust <dist>, .mean <dbl>
+\end{verbatim}
+
+Finally, we plot the results from our model which is based on seasonally
+adjusted data.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{autoplot}\NormalTok{(US\_fore, US\_model\_1) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{y =} \StringTok{"Number of people"}\NormalTok{, }\AttributeTok{title =} \StringTok{"US retail employment"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}
+\includegraphics{chapter5_review_files/figure-pdf/unnamed-chunk-41-1.pdf}
+\end{center}
+
+Another similar example follows below.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fit\_dcmp }\OtherTok{\textless{}{-}} \FunctionTok{model}\NormalTok{(us\_retail\_employment,}
+    \AttributeTok{stlf =} \FunctionTok{decomposition\_model}\NormalTok{(}\FunctionTok{STL}\NormalTok{(Employed }\SpecialCharTok{\textasciitilde{}} \FunctionTok{trend}\NormalTok{(}\AttributeTok{window =} \DecValTok{7}\NormalTok{),}
+          \AttributeTok{robust =} \ConstantTok{TRUE}\NormalTok{), }\FunctionTok{NAIVE}\NormalTok{(season\_adjust)))}
+\end{Highlighting}
+\end{Shaded}
+
+We start from the decomposing the model using an STL decomposition as
+before and then we fit a NAIVE model to the seasonally adjusted time
+series. We then plot the results.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{autoplot}\NormalTok{(}\FunctionTok{forecast}\NormalTok{(fit\_dcmp), us\_retail\_employment) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{y =} \StringTok{"Number of people"}\NormalTok{, }\AttributeTok{title =} \StringTok{"Monthly US retail employment"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}
+\includegraphics{chapter5_review_files/figure-pdf/unnamed-chunk-43-1.pdf}
+\end{center}
+
+We can also plot the residuals of the model by using:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{gg\_tsresiduals}\NormalTok{(fit\_dcmp)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}
+\includegraphics{chapter5_review_files/figure-pdf/unnamed-chunk-44-1.pdf}
+\end{center}
+
+From here we notice some patterns in how those are distributed and the
+autocorrelation at different time lags. We now want to compute the mean
+of the innovation residuals.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{features}\NormalTok{(}\FunctionTok{augment}\NormalTok{(fit\_dcmp), .innov, }\FunctionTok{list}\NormalTok{(}\AttributeTok{avg =} \SpecialCharTok{\textasciitilde{}} \FunctionTok{mean}\NormalTok{(.,}\AttributeTok{na.rm=}\ConstantTok{TRUE}\NormalTok{)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+# A tibble: 1 x 3
+  Series_ID     .model   avg
+  <chr>         <chr>  <dbl>
+1 CEU4200000001 stlf    7.84
+\end{verbatim}
+
+A simpler way to get the mean of the residuals \textbf{when you only
+estimate one model} is shown below.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{mean}\NormalTok{(}\FunctionTok{augment}\NormalTok{(fit\_dcmp)}\SpecialCharTok{$}\NormalTok{.innov, }\AttributeTok{na.rm=}\ConstantTok{TRUE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+[1] 7.836419
+\end{verbatim}
+
+\subsection{Subsetting}\label{subsetting}
+
+Subsetting refers to extracting only some rows in a dataset. Subsetting
+is usually a synonym of filtering the data and this is also shown in
+code. Here is an example:
+
+\phantomsection\label{annotated-cell-48}%
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{filter}\NormalTok{(aus\_production, }\FunctionTok{year}\NormalTok{(Quarter) }\SpecialCharTok{\textgreater{}=} \DecValTok{1995}\NormalTok{) }\hspace*{\fill}\NormalTok{\circled{1}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{description}
+\tightlist
+\item[\circled{1}]
+only get the rows where the year of the observation is greater than or
+equal to 1995
+\end{description}
+
+\begin{verbatim}
+# A tsibble: 62 x 7 [1Q]
+   Quarter  Beer Tobacco Bricks Cement Electricity   Gas
+     <qtr> <dbl>   <dbl>  <dbl>  <dbl>       <dbl> <dbl>
+ 1 1995 Q1   426    4714    430   1626       41768   131
+ 2 1995 Q2   408    3939    457   1703       43686   167
+ 3 1995 Q3   416    6137    417   1733       46022   181
+ 4 1995 Q4   520    4739    370   1545       42800   145
+ 5 1996 Q1   409    4275    310   1526       43661   133
+ 6 1996 Q2   398    5239    358   1593       44707   162
+ 7 1996 Q3   398    6293    379   1706       46326   184
+ 8 1996 Q4   507    5575    369   1699       43346   146
+ 9 1997 Q1   432    4802    330   1511       43938   135
+10 1997 Q2   398    5523    390   1785       45828   171
+# i 52 more rows
+\end{verbatim}
+
+In case you do not have a specific filtering condition to use, you can
+use slice to get a subset of your data.
+
+\phantomsection\label{annotated-cell-49}%
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{slice}\NormalTok{(aus\_production, }\FunctionTok{n}\NormalTok{()}\SpecialCharTok{{-}}\DecValTok{19}\SpecialCharTok{:}\DecValTok{0}\NormalTok{) }\hspace*{\fill}\NormalTok{\circled{1}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{description}
+\tightlist
+\item[\circled{1}]
+last 20 observations obtained using the \texttt{n()} function which
+returns the total number of rows (n) in the aus\_production dataset.
+Then the slice only selects the rows from n-19 to the end.
+\end{description}
+
+\begin{verbatim}
+# A tsibble: 20 x 7 [1Q]
+   Quarter  Beer Tobacco Bricks Cement Electricity   Gas
+     <qtr> <dbl>   <dbl>  <dbl>  <dbl>       <dbl> <dbl>
+ 1 2005 Q3   408      NA     NA   2340       56043   221
+ 2 2005 Q4   482      NA     NA   2265       54992   180
+ 3 2006 Q1   438      NA     NA   2027       57112   171
+ 4 2006 Q2   386      NA     NA   2278       57157   224
+ 5 2006 Q3   405      NA     NA   2427       58400   233
+ 6 2006 Q4   491      NA     NA   2451       56249   192
+ 7 2007 Q1   427      NA     NA   2140       56244   187
+ 8 2007 Q2   383      NA     NA   2362       55036   234
+ 9 2007 Q3   394      NA     NA   2536       59806   245
+10 2007 Q4   473      NA     NA   2562       56411   205
+11 2008 Q1   420      NA     NA   2183       59118   194
+12 2008 Q2   390      NA     NA   2558       56660   229
+13 2008 Q3   410      NA     NA   2612       64067   249
+14 2008 Q4   488      NA     NA   2373       59045   203
+15 2009 Q1   415      NA     NA   1963       58368   196
+16 2009 Q2   398      NA     NA   2160       57471   238
+17 2009 Q3   419      NA     NA   2325       58394   252
+18 2009 Q4   488      NA     NA   2273       57336   210
+19 2010 Q1   414      NA     NA   1904       58309   205
+20 2010 Q2   374      NA     NA   2401       58041   236
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{slice}\NormalTok{(}\FunctionTok{group\_by}\NormalTok{(aus\_retail, State, Industry), }\DecValTok{1}\SpecialCharTok{:}\DecValTok{12}\NormalTok{) }\CommentTok{\# working with groups}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+# A tsibble: 1,824 x 5 [1M]
+# Key:       State, Industry [152]
+# Groups:    State, Industry [152]
+   State                        Industry           `Series ID`    Month Turnover
+   <chr>                        <chr>              <chr>          <mth>    <dbl>
+ 1 Australian Capital Territory Cafes, restaurant~ A3349849A   1982 Apr      4.4
+ 2 Australian Capital Territory Cafes, restaurant~ A3349849A   1982 May      3.4
+ 3 Australian Capital Territory Cafes, restaurant~ A3349849A   1982 Jun      3.6
+ 4 Australian Capital Territory Cafes, restaurant~ A3349849A   1982 Jul      4  
+ 5 Australian Capital Territory Cafes, restaurant~ A3349849A   1982 Aug      3.6
+ 6 Australian Capital Territory Cafes, restaurant~ A3349849A   1982 Sep      4.2
+ 7 Australian Capital Territory Cafes, restaurant~ A3349849A   1982 Oct      4.8
+ 8 Australian Capital Territory Cafes, restaurant~ A3349849A   1982 Nov      5.4
+ 9 Australian Capital Territory Cafes, restaurant~ A3349849A   1982 Dec      6.9
+10 Australian Capital Territory Cafes, restaurant~ A3349849A   1983 Jan      3.8
+# i 1,814 more rows
+\end{verbatim}
+
+\subsection{Forecast errors}\label{forecast-errors}
+
+\phantomsection\label{annotated-cell-51}%
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{recent\_production }\OtherTok{\textless{}{-}} \FunctionTok{filter}\NormalTok{(aus\_production, }\FunctionTok{year}\NormalTok{(Quarter) }\SpecialCharTok{\textgreater{}=} \DecValTok{1992}\NormalTok{) }\hspace*{\fill}\NormalTok{\circled{1}}
+
+\NormalTok{beer\_train }\OtherTok{\textless{}{-}} \FunctionTok{filter}\NormalTok{(recent\_production, }\FunctionTok{year}\NormalTok{(Quarter) }\SpecialCharTok{\textless{}=} \DecValTok{2007}\NormalTok{) }\hspace*{\fill}\NormalTok{\circled{2}}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{description}
+\tightlist
+\item[\circled{1}]
+get rows where year is after 1992 (included)
+\item[\circled{2}]
+train / test split
+\end{description}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{beer\_fit }\OtherTok{\textless{}{-}} \FunctionTok{model}\NormalTok{(beer\_train, }\AttributeTok{Mean =} \FunctionTok{MEAN}\NormalTok{(Beer),}
+    \AttributeTok{Naive =} \FunctionTok{NAIVE}\NormalTok{(Beer),}
+    \StringTok{\textquotesingle{}Seasonal naive\textquotesingle{}} \OtherTok{=} \FunctionTok{SNAIVE}\NormalTok{(Beer),}
+    \AttributeTok{Drift =} \FunctionTok{RW}\NormalTok{(Beer }\SpecialCharTok{\textasciitilde{}} \FunctionTok{drift}\NormalTok{()))}
+\end{Highlighting}
+\end{Shaded}
+
+Fit three models to our training dataset. Finally, produce forecasts
+using our model.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{(beer\_fc }\OtherTok{\textless{}{-}} \FunctionTok{forecast}\NormalTok{(beer\_fit, }\AttributeTok{h =} \DecValTok{10}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+# A fable: 40 x 4 [1Q]
+# Key:     .model [4]
+   .model Quarter
+   <chr>    <qtr>
+ 1 Mean   2008 Q1
+ 2 Mean   2008 Q2
+ 3 Mean   2008 Q3
+ 4 Mean   2008 Q4
+ 5 Mean   2009 Q1
+ 6 Mean   2009 Q2
+ 7 Mean   2009 Q3
+ 8 Mean   2009 Q4
+ 9 Mean   2010 Q1
+10 Mean   2010 Q2
+# i 30 more rows
+# i 2 more variables: Beer <dist>, .mean <dbl>
+\end{verbatim}
+
+And plot the forecasts without plotting the prediction intervals (i.e.,
+\texttt{level\ =\ NULL}).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{autoplot}\NormalTok{(beer\_fc, recent\_production, }\AttributeTok{level =} \ConstantTok{NULL}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{y =} \StringTok{"Megalitres"}\NormalTok{, }\AttributeTok{title =} \StringTok{"Forecasts for quarterly beer production"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{guides}\NormalTok{(}\AttributeTok{colour =} \FunctionTok{guide\_legend}\NormalTok{(}\AttributeTok{title =} \StringTok{"Forecast"}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}
+\includegraphics{chapter5_review_files/figure-pdf/unnamed-chunk-53-1.pdf}
+\end{center}
+
+Finally, we evaluate the performance of our model by producing an
+accuracy table.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{accTable }\OtherTok{\textless{}{-}} \FunctionTok{accuracy}\NormalTok{(beer\_fc, recent\_production)}
+\FunctionTok{select}\NormalTok{(accTable,.model,RMSE,MAE,MAPE)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+# A tibble: 4 x 4
+  .model          RMSE   MAE  MAPE
+  <chr>          <dbl> <dbl> <dbl>
+1 Drift           64.9  58.9 14.6 
+2 Mean            38.4  34.8  8.28
+3 Naive           62.7  57.4 14.2 
+4 Seasonal naive  14.3  13.4  3.17
+\end{verbatim}
+
+This allows us to get the main accuracy measures for the different
+models fit to the data. From the table we see that the Seasonal naive
+model scores the lowest on the error metrics, and therefore is the best
+model among those proposed.
 
 
 
