@@ -8,7 +8,7 @@ mainfont: Times New Roman
 
 format:  
   pdf:
-    toc: true                 # Adds a TOC for PDF as well
+    toc: false                 # Adds a TOC for PDF as well
     margin-top: 1.5cm         # Sets top margin for PDF
     margin-left: 2cm          # Left margin for better readability
     margin-right: 2cm         # Right margin for better readability
@@ -22,23 +22,34 @@ page-layout: article          # Article layout keeps focus on content
 editor: visual
 ---
 
+::: callout-warning
+The following document should not be viewed as a solution to the exercises, but rather as a resource that can help you think about how you can solve similar problems. For issues, always refer back to the original solution provided by your Professor in class.
+:::
+
 # Exercise 1
 
+First, we import the necessary libraries.
+
 ```{r, warning=FALSE}
+#| output: false
 library(tidyquant)
 library(fpp3)
 ```
 
-Look up on the internet the ticker symbol of General Electric (GE)
+You can look up on the internet the ticker symbol for General Electric (GE) to understand what to input as the first argument to the `tq_get()` function.
 
 ```{r, warning=FALSE}
 ge_data <- tq_get("GE", from = "2024-06-01", to = "2024-11-10")
 head(ge_data)
 ```
 
+Now we check if the data we have is already in the form of a tsibble.
+
 ```{r}
 is_tsibble(ge_data)
 ```
+
+Since it is not a tsibble as it does not include a continuous (without gaps) index, we need to create one for it. We do so by using the `row_number()` function to produce a sequence of numbers going from 1 to the number of the last row of the dataset. Finally, we convert the tibble into a tsibble using the `as_tsibble()` function and specifying `day` (the column we just created) as the index.
 
 ```{r}
 close_ge <- ge_data %>%
@@ -48,16 +59,72 @@ close_ge <- ge_data %>%
 ge_tsibble <- as_tsibble(close_ge, index = day)
 ```
 
+Before we delve deeper into the analysis, it is useful to visualize a time plot of our variable of interest (`close`) over time.
+
 ```{r}
 autoplot(ge_tsibble, .vars=close)
 ```
 
+## Point A)
+
+The first step is to set up the cross validation structure using the `stretch_tsibble()` function and specify the `.step = 1` and `.init = 3` arguments to say that we want to start with a first set of observations which will be made of 3 rows in our data and that each time we want to increase the number of observations in this set by 1. These values are arbitrary and you can pick different ones to set up a different cross validation structure.
+
 ```{r}
-fit <- model(ge_tsibble,
+(ge_cr <- stretch_tsibble(ge_tsibble, .step = 1, .init = 3))
+```
+
+Now, we fit the Naive and drift model to our data organized with the proper cross validation structure.
+
+```{r}
+fit <- model(ge_cr,
       naive = NAIVE(close),
       drift = RW(close~drift()))
 ```
 
+And then we produce the 1-step forecast using our models, as asked.
+
 ```{r}
-report(select(fit, drift))
+fore <- forecast(fit, h=1)
 ```
+
+We also get some information about which model performs better. Based solely on the RMSE, the Naive method seems to be performing better as it has the lowest value among the two.
+
+```{r, warning=FALSE}
+select(accuracy(fore, ge_tsibble), .model, RMSE)
+```
+
+## Point B)
+
+Now, we split the data in train and test sets gathering the first 90 rows in the train set and the remaining rows in the
+
+```{r}
+train <- ge_tsibble[1:90,]
+test <- ge_tsibble[91:nrow(ge_tsibble),]
+```
+
+```{r}
+nrow(ge_tsibble)
+```
+
+::: callout-tip
+In the cell above we used [slicing](https://bookdown.org/ndphillips/YaRrr/slicing-dataframes.html) to split the dataset in train and test sets. Remember about the possibility of doing this in the future. Also, notice how the `nrow()` function returns the number of the last row (or the total number of rows) present in the dataset that is passed as an argument inside of it.
+:::
+
+Then, we follow the same steps as above. We train model on training set and
+
+```{r}
+fit_train <- model(train,
+      naive = NAIVE(close),
+      drift = RW(close ~ drift()))
+```
+
+then produce forecast on test data.
+
+```{r}
+fore_train <- forecast(fit_train, new_data=test)
+select(accuracy(fore_train, test), .model, RMSE)
+```
+
+The two methods yield similar results as both show that the Naive method is the one with the lowest RMSE. However, I would trust more the results obtained through cross-validation as they are obtained by averaging the entire set of prediction errors obtained by producing a 1-step forecast each time. Also, cross validation is a more advanced technique to test our model on a set of data it did not see before, and therefore it is useful to prevent model [overfitting](https://aws.amazon.com/what-is/overfitting/).
+
+# Exercise 2
