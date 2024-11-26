@@ -210,7 +210,9 @@ autoplot(drift_fc, bricks, level = NULL)+
   autolayer(DashDRts,y,color='blue',linetype='dashed')
 ```
 
+::: {#tip-slope .callout-tip title="Equation of a line"}
 Notice that T, b, a are used to compute the interpolated line and that this follows from the equation of a line of the form $y = mx + q$ where $m$ is the slope parameter (b in the code) and $q$ is the intercept (a in the code, which is just the first observation in the time series).
+:::
 
 # Train / Test Split
 
@@ -295,9 +297,9 @@ beer_fit1 <- model(train, SNAIVE(Beer))
 
 1.  fitted values for a single method, along with residuals and innovation residuals
 
-We saw how by using `augment()` on a model we previously fit to our data we can get some more information about how it performs. For instance, we can see that the .resid and .innovation column contain the residuals and the innovation residuals for each estimate provided by the model. The difference between residuals and innovation residuals is just that innovation residuals are more interpretable when dealing with data that has gone through transformations. However, since that was not the case with our example, we see that the residuals match perfectly with the innovation ones.
+We saw how by using `augment()` on a model we previously fit to our data we can get some more information about how it performs. For instance, we can see that the `.resid` and `.innovation` column contain the residuals and the innovation residuals for each estimate provided by the model. The difference between residuals and innovation residuals is just that innovation residuals are more interpretable when dealing with data that has gone through transformations. However, since that was not the case with our example, we see that the residuals match perfectly with the innovation ones.
 
-```{r}
+```{r, warning=FALSE}
 ggplot(mean_fitted, aes(x = Quarter)) +
   geom_line(aes(y = Beer),color='black') +
   geom_line(aes(y = .fitted),color='red') 
@@ -369,7 +371,7 @@ With this we compute the Box-Pierce statistic on the data and obtain its related
 features(aug, .innov, ljung_box, lag = 10)
 ```
 
-Another approach is using the Ljung-Box test. It has been shown that the two tests yield comparable results, however, this test has been shown to be more precise overall so it is recommended that you use this one from now on. Remember that to use the `features()` function you need to specify the augmented model fit (aug in the example), select the .innov column containing the innovation residuals, and then specify that you want to compute the ljung_box statistic with a lag of 10 (due to the data being non-seasonal in this case).
+Another approach is using the Ljung-Box test. It has been shown that the two tests yield comparable results, however, this test has been shown to be more precise overall so it is recommended that you use this one from now on. Remember that to use the `features()` function you need to specify the augmented model fit (`aug` in the example), select the `.innov` column containing the innovation residuals, and then specify that you want to compute the `ljung_box` statistic with a `lag` of 10 (due to the data being non-seasonal in this case).
 
 ::: callout-important
 The book suggests using ℓ=10 (i.e., `lag = 10`) for non-seasonal data and ℓ=2m for seasonal data, where m is the period of seasonality. However, the test is not good when ℓ is large, so if these values are larger than T/5, then use ℓ=T/5. T in this case refers to the total number of observations that you are using to carry out the test (i.e., number of rows in your dataset).
@@ -384,7 +386,7 @@ fit <- model(google_2015, RW(Close ~ drift()))
 tidy(fit) #<1>
 ```
 
-1.  remember that the estimate obtained using the drift method is $\frac{(y_T-y_1)}{(T-1)}$ = (759-522)/251 = 0.9439931
+1.  remember that the estimate obtained using the drift method is $\frac{(y_{T}-y_{1})}{(T-1)}$ = (759-522)/251 = 0.9439931. We saw this also in @tip-slope
 
 ```{r}
 features(augment(fit), .innov, ljung_box, lag=10)

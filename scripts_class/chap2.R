@@ -1,25 +1,53 @@
 rm(list=ls())
 library(fpp3)
+library(lubridate)
 Sys.setlocale(locale = "English") 
 
 # creating an annual time series in a tsibble format
 c(1,2,3)
 
-y <- tsibble(
-  Year = 2015:2019,
+example <- tsibble(
+  test = 2015:2019,
   Observation = c(123, 39, 78, 52, 110),
-  index = Year
+  ex = c(1,2,3,4,5),
+  index = test
 )
+
+ex_tib <- tibble(
+  test = 2015:2019,
+  Observation = c(123, 39, 78, 52, 110),
+  ex = c(1,2,3,4,5),
+)
+
+autoplot(example, .vars=ex)
+autoplot(ex_tib, .vars=ex)
+
+ggplot(ex_tib, aes(x = test, y = Observation)) +
+  geom_point()
 
 # creating a tibble
 
 z <- tibble('Month' = c('2019 Jan','2019 Feb','2019 Mar','2019 Apr','2019 May'),
             'Observation' = c(50,23,34,30,25))
 
+
+z <- tibble('Month' = c('Jan 2019','Feb 2019'),
+            'Observation' = c(50,23))
+
+z1 <- mutate(z, Month = yearmonth(Month))
+
+select(z, Month)
+
+filter(z1, month(Month) >= 1)
+
 # converting to a tsibble
 
-z1 <- mutate(z, Month = yearmonth(Month)) 
+z1 <- mutate(z, Month = yearmonth(Month))
+
 z1ts <- as_tsibble(z1, index = Month)
+
+as.numeric(z$Month)
+as.numeric(z1$Month)
 
 # alternative syntax
 

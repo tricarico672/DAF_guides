@@ -65,32 +65,42 @@ snaive_fit <- model(bricks,SNAIVE(Bricks ~ lag("year")))
 snaive_fc <- forecast(snaive_fit, h = 12)
 autoplot(snaive_fc, bricks, level = NULL)
 
+gg_season(bricks)
+
 # Figure 5.6 (drift)
 
-drift_fit <- model(bricks,RW(Bricks ~ drift()))
+drift_fit <- model(bricks, RW(Bricks ~ drift()))
 drift_fc <- forecast(drift_fit, h = 12)
 autoplot(drift_fc, bricks, level = NULL)
 
 # adding fitted values to the plot
 
 T <- length(bricks$Bricks) #getting length of Bricks column
-b <- (bricks$Bricks[T] - bricks$Bricks[1])/(T - 1)
-a <- bricks$Bricks[1]
+b <- (bricks$Bricks[T] - bricks$Bricks[1])/(T - 1) #equation of a line: slope (row140-row1)/(140-1)
+a <- bricks$Bricks[1] 
 y <- a + b * seq(1,T,by=1)
+
 DashDR <- tibble(y,Date=bricks$Quarter)
 DashDRts <- as_tsibble(DashDR,index=Date)
-autoplot(drift_fc, bricks, level = NULL) +
+
+autoplot(drift_fc, bricks, level = NULL)+
   autolayer(DashDRts,y,color='blue',linetype='dashed')
 
 # Figure 5.7
 
 train <- filter_index(aus_production, "1992 Q1" ~ "2006 Q4") # Set training data from 1992 to 2006
+
+mean(filter_index(aus_production, "1992 Q1" ~ "2006 Q4")$Beer)
+
 beer_fit <- model(train, Mean = MEAN(Beer), Naive = NAIVE(Beer),
-'Seasonal naive' = SNAIVE(Beer))# Fit the models (quotation marks needed for names with blanks)
+"Seasonal naive" = SNAIVE(Beer)) # Fit the models (quotation marks needed for names with blanks)
+
 beer_fc <- forecast(beer_fit, h = 14) # Generate forecasts for 14 quarters
+
 autoplot(beer_fc, train, level = NULL) + # Plot forecasts against actual values
 autolayer(filter_index(aus_production, "2007 Q1" ~ .),
-colour = "black") + labs(y = "Megalitres", title = "Forecasts
+colour = "black") + 
+labs(y = "Megalitres", title = "Forecasts
           for quarterly beer production") +
 guides(colour = guide_legend(title = "Forecast"))
 
@@ -98,20 +108,44 @@ guides(colour = guide_legend(title = "Forecast"))
 
 recent_GOOG <- filter(gafa_stock, Symbol == "GOOG",
                       year(Date) >= 2015)
+
 goog <- mutate(recent_GOOG, day = row_number())
+
 google_stock <- update_tsibble(goog, index = day, regular = TRUE)
+
 google_2015 <- filter(google_stock, year(Date) == 2015) # Filter the year of interest
+
 google_fit <- model(google_2015, # Fit the models
 Mean = MEAN(Close), Naive = NAIVE(Close),
 Drift = NAIVE(Close ~ drift()))
+
 google_jan_2016 <- filter(google_stock,
         yearmonth(Date) == yearmonth("2016 Jan")) # Produce forecasts for the trading days in January 2016
+
+google_feb_2016 <- filter(google_stock,
+                          yearmonth(Date) == yearmonth("2016 Feb"))
+
 google_fc <- forecast(google_fit, new_data = google_jan_2016)
+google_fc2<- forecast(google_fit, h = 19)
+google_fc3<- forecast(google_fit, new_data = google_feb_2016)
+
 # Plot the forecasts
 autoplot(google_fc, google_2015, level = NULL) +
   autolayer(google_jan_2016, Close, colour = "black") +
   labs(y = "$US", title = "Google daily closing stock prices",
        subtitle = "(Jan 2015 - Jan 2016)") +
+  guides(colour = guide_legend(title = "Forecast"))
+
+autoplot(google_fc2, google_2015, level = NULL) +
+  autolayer(google_jan_2016, Close, colour = "black") +
+  labs(y = "$US", title = "Google daily closing stock prices",
+       subtitle = "(Jan 2015 - Jan 2016)") +
+  guides(colour = guide_legend(title = "Forecast"))
+
+autoplot(google_fc3, google_2015, level = NULL) +
+  autolayer(google_feb_2016, Close, colour = "black") +
+  labs(y = "$US", title = "Google daily closing stock prices",
+       subtitle = "(Jan 2015 - Feb 2016)") +
   guides(colour = guide_legend(title = "Forecast"))
 
 # Sect. 5.3
@@ -120,11 +154,14 @@ augment(beer_fit)
 
 beer_fit1 <- model(train, SNAIVE(Beer))
 mean_fitted <- augment(beer_fit1) # fitted values for a single method
+
 ggplot(mean_fitted, aes(x = Quarter)) +
   geom_line(aes(y = Beer),color='black') +
   geom_line(aes(y = .fitted),color='red') 
+
 autoplot(mean_fitted,.vars = Beer) + # alternative command
   autolayer(mean_fitted,.fitted,color='red')
+
 gg_tsresiduals(beer_fit1)
 
 # Figure 5.9
@@ -146,6 +183,7 @@ ggplot(aug, aes(x = .innov)) + geom_histogram() +
 p0 <- ggplot(aug, aes(x = .innov)) +
   geom_histogram(aes(y=after_stat(density)), bins = 20,
   color="black", fill="white")
+
 p0 + stat_function(fun = dnorm, colour = "red",
   args = list(mean = mean(aug$.innov,na.rm=TRUE),
   sd = sd(aug$.innov,na.rm=TRUE)))
@@ -206,10 +244,14 @@ hilo(fore)
 
 us_retail_employment <- filter(us_employment, year(Month) >= 1990,
                         Title == "Retail Trade")
+
 US_model_0 <- model(us_retail_employment,
               STL(Employed ~ trend(window = 7), robust = TRUE))
+
 US_model_1 <- select(components(US_model_0), -.model)
+
 US_fore <- forecast(model(US_model_1, NAIVE(season_adjust)))
+
 autoplot(US_fore, US_model_1) +
   labs(y = "Number of people", title = "US retail employment")
 
@@ -218,6 +260,7 @@ autoplot(US_fore, US_model_1) +
 fit_dcmp <- model(us_retail_employment,
     stlf = decomposition_model(STL(Employed ~ trend(window = 7),
           robust = TRUE), NAIVE(season_adjust)))
+
 autoplot(forecast(fit_dcmp), us_retail_employment) +
   labs(y = "Number of people", title = "Monthly US retail employment")
 
@@ -237,12 +280,14 @@ slice(group_by(aus_retail, State, Industry), 1:12) # working with groups
 # Forecast errors
 
 recent_production <- filter(aus_production, year(Quarter) >= 1992)
+
 beer_train <- filter(recent_production, year(Quarter) <= 2007)
-beer_fit <- 
-  model(beer_train, Mean = MEAN(Beer),
+
+beer_fit <- model(beer_train, Mean = MEAN(Beer),
     Naive = NAIVE(Beer),
     'Seasonal naive' = SNAIVE(Beer),
     Drift = RW(Beer ~ drift()))
+
 beer_fc <- forecast(beer_fit, h = 10)
 
 # Figure 5.21

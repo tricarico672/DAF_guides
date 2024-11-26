@@ -1,0 +1,63 @@
+---
+title: "HW3 Review"
+author: "Anthony Tricarico"
+link-citations: true
+number-sections: true
+
+mainfont: Times New Roman
+
+format:  
+  pdf:
+    toc: true                 # Adds a TOC for PDF as well
+    margin-top: 1.5cm         # Sets top margin for PDF
+    margin-left: 2cm          # Left margin for better readability
+    margin-right: 2cm         # Right margin for better readability
+    fig-align: center
+
+# Aesthetic options for code rendering
+code-block-style: github      # Styles code blocks similar to GitHub's appearance
+code-fold: true               # Allows readers to fold/unfold code blocks
+code-overflow: wrap           # Ensures code stays within margins
+page-layout: article          # Article layout keeps focus on content
+editor: visual
+---
+
+# Exercise 1
+
+```{r, warning=FALSE}
+library(tidyquant)
+library(fpp3)
+```
+
+Look up on the internet the ticker symbol of General Electric (GE)
+
+```{r, warning=FALSE}
+ge_data <- tq_get("GE", from = "2024-06-01", to = "2024-11-10")
+head(ge_data)
+```
+
+```{r}
+is_tsibble(ge_data)
+```
+
+```{r}
+close_ge <- ge_data %>%
+  mutate(day = dplyr::row_number()) %>%
+  select(close, day)
+
+ge_tsibble <- as_tsibble(close_ge, index = day)
+```
+
+```{r}
+autoplot(ge_tsibble, .vars=close)
+```
+
+```{r}
+fit <- model(ge_tsibble,
+      naive = NAIVE(close),
+      drift = RW(close~drift()))
+```
+
+```{r}
+report(select(fit, drift))
+```

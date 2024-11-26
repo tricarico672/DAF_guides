@@ -198,6 +198,8 @@
         \newcommand*\circled[1]{\tikz[baseline=(char.base)]{
           \node[shape=circle,draw,inner sep=1pt] (char) {{\scriptsize#1}};}}  
                   
+\newcounter{quartocallouttipno}
+\newcommand{\quartocallouttip}[1]{\refstepcounter{quartocallouttipno}\label{#1}}
 
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
@@ -701,11 +703,17 @@ to the last observation by looking at this plot.
 \includegraphics{chapter5_review_files/figure-pdf/unnamed-chunk-19-1.pdf}
 \end{center}
 
+\begin{tcolorbox}[enhanced jigsaw, toptitle=1mm, titlerule=0mm, leftrule=.75mm, opacityback=0, breakable, colback=white, bottomrule=.15mm, rightrule=.15mm, left=2mm, toprule=.15mm, bottomtitle=1mm, title=\textcolor{quarto-callout-tip-color}{\faLightbulb}\hspace{0.5em}{Tip \ref*{tip-slope}: Equation of a line}, arc=.35mm, colbacktitle=quarto-callout-tip-color!10!white, opacitybacktitle=0.6, coltitle=black, colframe=quarto-callout-tip-color-frame]
+
+\quartocallouttip{tip-slope} 
+
 Notice that T, b, a are used to compute the interpolated line and that
 this follows from the equation of a line of the form \(y = mx + q\)
 where \(m\) is the slope parameter (b in the code) and \(q\) is the
 intercept (a in the code, which is just the first observation in the
 time series).
+
+\end{tcolorbox}
 
 \section{Train / Test Split}\label{train-test-split}
 
@@ -926,11 +934,6 @@ the innovation ones.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{verbatim}
-Warning: Removed 4 rows containing missing values or values outside the scale range
-(`geom_line()`).
-\end{verbatim}
-
 \begin{center}
 \includegraphics{chapter5_review_files/figure-pdf/unnamed-chunk-27-1.pdf}
 \end{center}
@@ -941,11 +944,6 @@ Warning: Removed 4 rows containing missing values or values outside the scale ra
   \FunctionTok{autolayer}\NormalTok{(mean\_fitted,.fitted,}\AttributeTok{color=}\StringTok{\textquotesingle{}red\textquotesingle{}}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
-
-\begin{verbatim}
-Warning: Removed 4 rows containing missing values or values outside the scale range
-(`geom_line()`).
-\end{verbatim}
 
 \begin{center}
 \includegraphics{chapter5_review_files/figure-pdf/unnamed-chunk-27-2.pdf}
@@ -1109,12 +1107,12 @@ Another approach is using the Ljung-Box test. It has been shown that the
 two tests yield comparable results, however, this test has been shown to
 be more precise overall so it is recommended that you use this one from
 now on. Remember that to use the \texttt{features()} function you need
-to specify the augmented model fit (aug in the example), select the
-.innov column containing the innovation residuals, and then specify that
-you want to compute the ljung\_box statistic with a lag of 10 (due to
-the data being non-seasonal in this case).
+to specify the augmented model fit (\texttt{aug} in the example), select
+the \texttt{.innov} column containing the innovation residuals, and then
+specify that you want to compute the \texttt{ljung\_box} statistic with
+a \texttt{lag} of 10 (due to the data being non-seasonal in this case).
 
-\begin{tcolorbox}[enhanced jigsaw, bottomrule=.15mm, colframe=quarto-callout-important-color-frame, toptitle=1mm, breakable, colback=white, left=2mm, arc=.35mm, coltitle=black, opacitybacktitle=0.6, leftrule=.75mm, opacityback=0, rightrule=.15mm, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, colbacktitle=quarto-callout-important-color!10!white, bottomtitle=1mm, titlerule=0mm, toprule=.15mm]
+\begin{tcolorbox}[enhanced jigsaw, toptitle=1mm, titlerule=0mm, leftrule=.75mm, opacityback=0, breakable, colback=white, bottomrule=.15mm, rightrule=.15mm, left=2mm, toprule=.15mm, bottomtitle=1mm, title=\textcolor{quarto-callout-important-color}{\faExclamation}\hspace{0.5em}{Important}, arc=.35mm, colbacktitle=quarto-callout-important-color!10!white, opacitybacktitle=0.6, coltitle=black, colframe=quarto-callout-important-color-frame]
 
 The book suggests using ℓ=10 (i.e., \texttt{lag\ =\ 10}) for
 non-seasonal data and ℓ=2m for seasonal data, where m is the period of
@@ -1142,7 +1140,8 @@ models present patterns or are auto-correlated.
 \tightlist
 \item[\circled{1}]
 remember that the estimate obtained using the drift method is
-\(\frac{(y_T-y_1)}{(T-1)}\) = (759-522)/251 = 0.9439931
+\(\frac{(y_{T}-y_{1})}{(T-1)}\) = (759-522)/251 = 0.9439931. We saw this
+also in Tip~\ref{tip-slope}
 \end{description}
 
 \begin{verbatim}
@@ -1236,13 +1235,13 @@ forecast distribution.
  1 GOOG   NAIVE(Close)   253 sample[1000]  759.
  2 GOOG   NAIVE(Close)   254 sample[1000]  759.
  3 GOOG   NAIVE(Close)   255 sample[1000]  759.
- 4 GOOG   NAIVE(Close)   256 sample[1000]  759.
- 5 GOOG   NAIVE(Close)   257 sample[1000]  759.
- 6 GOOG   NAIVE(Close)   258 sample[1000]  760.
+ 4 GOOG   NAIVE(Close)   256 sample[1000]  758.
+ 5 GOOG   NAIVE(Close)   257 sample[1000]  758.
+ 6 GOOG   NAIVE(Close)   258 sample[1000]  759.
  7 GOOG   NAIVE(Close)   259 sample[1000]  759.
- 8 GOOG   NAIVE(Close)   260 sample[1000]  760.
- 9 GOOG   NAIVE(Close)   261 sample[1000]  760.
-10 GOOG   NAIVE(Close)   262 sample[1000]  760.
+ 8 GOOG   NAIVE(Close)   260 sample[1000]  759.
+ 9 GOOG   NAIVE(Close)   261 sample[1000]  759.
+10 GOOG   NAIVE(Close)   262 sample[1000]  759.
 \end{verbatim}
 
 Finally we take a look at the final forecast distribution along with the
@@ -1259,16 +1258,16 @@ prediction intervals
 # Key:       Symbol, .model [1]
    Symbol .model         day        Close .mean                  `80%`
    <chr>  <chr>        <dbl>       <dist> <dbl>                 <hilo>
- 1 GOOG   NAIVE(Close)   253 sample[1000]  759. [747.8160, 771.8960]80
- 2 GOOG   NAIVE(Close)   254 sample[1000]  759. [742.1871, 774.8240]80
- 3 GOOG   NAIVE(Close)   255 sample[1000]  759. [738.6650, 779.4271]80
- 4 GOOG   NAIVE(Close)   256 sample[1000]  759. [735.5861, 781.8397]80
- 5 GOOG   NAIVE(Close)   257 sample[1000]  759. [731.5328, 787.0748]80
- 6 GOOG   NAIVE(Close)   258 sample[1000]  760. [730.2786, 791.5545]80
- 7 GOOG   NAIVE(Close)   259 sample[1000]  759. [727.1139, 795.2611]80
- 8 GOOG   NAIVE(Close)   260 sample[1000]  760. [724.4122, 797.9961]80
- 9 GOOG   NAIVE(Close)   261 sample[1000]  760. [721.9938, 801.4880]80
-10 GOOG   NAIVE(Close)   262 sample[1000]  760. [719.6038, 804.1328]80
+ 1 GOOG   NAIVE(Close)   253 sample[1000]  759. [747.3290, 769.8360]80
+ 2 GOOG   NAIVE(Close)   254 sample[1000]  759. [741.6050, 774.2036]80
+ 3 GOOG   NAIVE(Close)   255 sample[1000]  759. [738.2767, 779.7247]80
+ 4 GOOG   NAIVE(Close)   256 sample[1000]  758. [733.8743, 782.1182]80
+ 5 GOOG   NAIVE(Close)   257 sample[1000]  758. [731.4141, 786.1595]80
+ 6 GOOG   NAIVE(Close)   258 sample[1000]  759. [728.6593, 790.6161]80
+ 7 GOOG   NAIVE(Close)   259 sample[1000]  759. [726.1230, 793.6760]80
+ 8 GOOG   NAIVE(Close)   260 sample[1000]  759. [723.3868, 795.5324]80
+ 9 GOOG   NAIVE(Close)   261 sample[1000]  759. [721.3646, 798.3353]80
+10 GOOG   NAIVE(Close)   262 sample[1000]  759. [718.7703, 800.8452]80
 # i 1 more variable: `95%` <hilo>
 \end{verbatim}
 
