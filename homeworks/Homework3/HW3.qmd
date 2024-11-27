@@ -128,3 +128,101 @@ select(accuracy(fore_train, test), .model, RMSE)
 The two methods yield similar results as both show that the Naive method is the one with the lowest RMSE. However, I would trust more the results obtained through cross-validation as they are obtained by averaging the entire set of prediction errors obtained by producing a 1-step forecast each time. Also, cross validation is a more advanced technique to test our model on a set of data it did not see before, and therefore it is useful to prevent model [overfitting](https://aws.amazon.com/what-is/overfitting/).
 
 # Exercise 2
+
+## Point A) {#sec-point-a}
+
+```{r}
+series <- read.table("~/Desktop/UniTrento/Tutorato/Software R (English)/DAF/homeworks/Homework3/data/series.txt", quote="\"")
+names(series) <- "time_series"
+```
+
+Generate and add date column to the time series
+
+```{r}
+series_updated <- series %>%
+  mutate(date = seq.Date(from = as.Date("2024-01-01"), to = as.Date("2024-04-09"), by = "day"))
+```
+
+```{r}
+series_tsibble <- as_tsibble(series_updated, index = date)
+```
+
+plots
+
+```{r}
+autoplot(series_tsibble, time_series) +
+  labs(title = "time plot for time series")
+```
+
+```{r}
+gg_subseries(series_tsibble, time_series, period = "1w")
+```
+
+From the histogram we learn that the distribution is bimodal (i.e., has two modes and therefore it cannot be assumed to be normal), which might make our modeling more difficult later on.
+
+```{r}
+ggplot(series_tsibble, aes(x = time_series)) +
+  geom_histogram(aes(y=after_stat(density)), fill = "white", color = "black", bins = 20) +
+  stat_function(fun = dnorm, color = "red",
+                args = list(mean = mean(series_tsibble$time_series),
+                            sd = sd(series_tsibble$time_series)))
+```
+
+## Point B)
+
+models
+
+```{r}
+fit <- model(series_tsibble,
+      naive = NAIVE(time_series),
+      drift = RW(time_series ~ drift()))
+```
+
+forecasts
+
+```{r}
+(fore <- forecast(fit, h = 10))
+```
+
+## Point C)
+
+CIs
+
+```{r}
+hilo(fore, level = .95)
+```
+
+## Point D)
+
+Considering how the distribution is mainly bimodal, as shown from the histogram in @sec-point-a a Box Cox transformation would not help address that issues. We can still test this hypothesis by computing the transformation anyway.
+
+```{r}
+lambda <- features(series_tsibble, time_series, features = list(guerrero))$lambda_guerrero
+```
+
+add column with transformed data
+
+```{r}
+series_tsibble <- series_tsibble %>%
+  mutate(transformed = box_cox(time_series, lambda))
+
+head(series_tsibble)
+```
+
+```{r}
+library(gridExtra)
+pt <- autoplot(series_tsibble, transformed)
+pn <- autoplot(series_tsibble, time_series)
+
+gridExtra::grid.arrange(pt,pn, nrow=2)
+```
+
+```{r}
+ggplot(series_tsibble, aes(x = transformed)) +
+  geom_histogram(aes(y=after_stat(density)), fill = "white", color = "black", bins = 20) +
+  stat_function(fun = dnorm, color = "red",
+                args = list(mean = mean(series_tsibble$transformed),
+                            sd = sd(series_tsibble$transformed)))
+```
+
+We see that the data does not change much in shape and that the distribution does not get closer to a normal one. Therefore, in reality, applying the transformation does not help stabilize the variance. Moreover, the distribution remains bimodal. In general, transforming a bimodal distribution with Box-Cox might make it more symmetric, but it won’t resolve the fundamental issue of having two modes.
