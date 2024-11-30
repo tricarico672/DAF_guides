@@ -12,7 +12,7 @@ format:
     margin-top: 1.5cm         # Sets top margin for PDF
     margin-left: 2cm          # Left margin for better readability
     margin-right: 2cm         # Right margin for better readability
-    keep-tex: true            # Keeps the intermediate .tex file for debugging/adjustments
+    keep-tex: false
     fig-align: center
 
 # Aesthetic options for code rendering
@@ -214,7 +214,7 @@ autoplot(drift_fc, bricks, level = NULL)+
 Notice that T, b, a are used to compute the interpolated line and that this follows from the equation of a line of the form $y = mx + q$ where $m$ is the slope parameter (b in the code) and $q$ is the intercept (a in the code, which is just the first observation in the time series).
 :::
 
-# Train / Test Split
+# Train / Test Split {#sec-train-test-split}
 
 To test how well our model performs we need to test in on data on which it was not trained. This is often done to prevent the problem of *overfitting* which refers to the fact that when a parameters of a model are estimated those perform well on the data that the model has already seen but performs poorly on new data (which is actually what should not happen). To mitigate this problem we divide our dataset into a *train* and a *test* portion.
 
@@ -404,19 +404,51 @@ Finally we use the `hilo()` function to extract confidence (prediction) interval
 
 We can use our model to generate more observations. These observations would be generated based on what has been observed in previous periods, but they would still vary. In this case, we are building a simulation to test our model on multiple different future possibilities. The method that is used to obtain new random observations starting from a sample is called **bootstrap**.
 
-To generate these bootstrapped residuals we can use the `generate()` function in R. Alternatively, we could also just set the `bootstrap` argument in the `forecast()` to `TRUE` and specify how many `times` we want to run the bootstrap simulation.
+To generate these random observations we use the `generate()` function in R. This function uses a model we previously fitted to our data to create new random observations which can be viewed as alternative futures. Here is how it works:
 
 ```{r}
-(fore <- forecast(model(google_2015, NAIVE(Close)), h = 10,
-        bootstrap = TRUE, times = 1000)) #<1>
+set.seed(124) #<1>
+fit <- model(google_2015, NAIVE(Close))
+sim <- generate(fit, h = 30, times = 5, bootstrap = TRUE) #<2>
+
+head(sim, 10) #<3>
+```
+
+1.  Setting the seed for reproducibility purposes. Given a random generation process, if you set a seed and then you run this code on your own machine you will get the same results as the one observed in the table above. This means that you will also get the same time plot as the one shown below.
+2.  Here we are specifying that we want to generate observations for the 30 days after the last one in the dataset (`h = 30`). Also, we are specifying that we want to produce these observations to see 5 alternative futures (`times = 5`). Of course, we want to do that using the bootstrap method (`bootstrap = TRUE`).
+3.  View the first 10 lines of our `sim`ulation table.
+
+Here is what these new alternative futures would look like based on how they have been produced following our model.
+
+```{r}
+ggplot(google_2015, aes(x = day)) +
+  geom_line(aes(y = Close)) +
+  geom_line(data = sim, aes(y = .sim, colour = as.factor(.rep))) +
+  labs(title="Google daily closing stock price", 
+       y="$US" ) +
+  guides(colour = "none")
+```
+
+When using the bootstrap method in forecasting (e.g., with the `forecast()` function in R), the model generates prediction intervals by resampling past errors to simulate potential future outcomes. This helps provide a more robust estimate of the uncertainty in forecasts. While this approach does not directly make the model more precise, it offers a more data-driven way to assess the range of likely future values based on historical error patterns. To do this we set the `bootstrap` argument in the `forecast()` to `TRUE` and specify how many `times` we want to run the bootstrap resampling.
+
+```{r}
+fore <- forecast(model(google_2015, NAIVE(Close)), h = 10,
+        bootstrap = TRUE, times = 1000) #<1>
 ```
 
 1.  This specifies that the bootstrapping process will perform 1000 simulations. Each simulation generates a possible future path for the time series. These simulations are then aggregated to produce the final forecast distribution.
 
-Finally we take a look at the final forecast distribution along with the prediction intervals
+Finally we take a look at the final forecast distribution along with the prediction intervals.
 
 ```{r}
 hilo(fore)
+```
+
+We observe that if we compare this with the ones we previously obtained without bootstrap resampling, the method that does not uses bootstrap will produce larger (i.e. less accurate) prediction intervals, as shown below.
+
+```{r}
+hilo(forecast(model(google_2015, NAIVE(Close)), h = 10)) %>%
+  select(-Symbol, -.model)
 ```
 
 # Final lines of code
@@ -545,3 +577,91 @@ select(accTable,.model,RMSE,MAE,MAPE)
 ```
 
 This allows us to get the main accuracy measures for the different models fit to the data. From the table we see that the Seasonal naive model scores the lowest on the error metrics, and therefore is the best model among those proposed.
+
+Another example with the Google stock data from before is reported below
+
+```{r}
+google_fit <- model(google_2015, Mean = MEAN(Close),
+    Naive = NAIVE(Close),
+    Drift = RW(Close ~ drift()))
+
+google_fc <- forecast(google_fit, google_jan_2016)
+```
+
+```{r}
+autoplot(google_fc, bind_rows(google_2015, google_jan_2016), #<1>
+         level = NULL) +
+  labs(y = "$US", title = "Google closing stock prices from Jan 2015") +
+  guides(colour = guide_legend(title = "Forecast"))
+```
+
+1.  the `bind_rows()` function just appends to the end of the `google_2015` tsibble the rows contained in the `google_jan_2016` tsibble. This is done so that in the plot we see a smooth time series (in black) instead of having an abrupt break in between 2015 and 2016.
+
+```{r}
+accTable <- accuracy(google_fc, google_stock)
+select(accTable,.model,RMSE,MAE,MAPE)
+```
+
+#### Quantile Score
+
+We also produce a quantile score for NAIVE model since it has the lowest RMSE among the models proposed.
+
+```{r}
+accuracy(
+  filter(google_fc, .model == "Naive", Date == "2016-01-04"), 
+  google_stock, list(qs=quantile_score), probs=0.10
+  )
+```
+
+The mathematical formulation is explained well in chapter 5.9 of the [textbook](https://otexts.com/fpp3/distaccuracy.html) but a low value of the `qs` tells you that your quantile estimate is good enough.
+
+#### Winkler's Score
+
+This score is a measure of the accuracy of the prediction interval.
+
+```{r}
+accuracy(filter(google_fc, .model == "Naive", Date == "2016-01-04"), 
+         google_stock, list(winkler = winkler_score), level = 80)
+```
+
+Usually, the lower this metric the better as it indicates a narrower and more precise forecast interval and therefore less spread out predictions.
+
+#### Continuous Ranked Probability Score
+
+This is the last metric used to discuss forecast distribution's accuracy.
+
+```{r}
+accuracy(google_fc, google_stock, list(crps = CRPS))
+```
+
+Also in this case, lower values indicate more precision in the predictions.
+
+## Cross Validation
+
+Cross Validation is a process that extends the concept of Train / Test split seen in @sec-train-test-split . The main idea is that we generate different train sets and use those to train the model. Then we test the model on a single observation in the future and we compare the prediction made by the model by the actual value, thus recording the residuals as we make more comparisons across different time windows.
+
+The way we do this in R is by using the `stretch_tsibble()` function which is used to create many training sets.
+
+```{r}
+google_2015_tr <- relocate(stretch_tsibble(google_2015, #<1>
+    .init = 3, .step = 1), Date, Symbol, .id) #<2>
+```
+
+1.  The `relocate()` function just changes the order of the columns
+2.  `.init = 3` defines the length of the first training set and each time we increase this training set by 1 (`.step = 1`)
+
+Finally, we get the accuracy of the model after performing cross validation:
+
+```{r, warning=FALSE}
+fore <- forecast(model(google_2015_tr, RW(Close ~ drift())),
+        h = 1)
+accuracy(fore, google_2015)
+```
+
+And then we compare this with the full accuracy on the training set.
+
+```{r}
+accuracy(model(google_2015, RW(Close ~ drift())))
+```
+
+Of course, the model trained on the full set of data is more accurate since, technically, it is not even producing any forecast in the future.
