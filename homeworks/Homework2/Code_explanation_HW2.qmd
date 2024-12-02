@@ -95,19 +95,24 @@ So far in the course you've explored some useful statistics that can be computed
 Autocorrelation refers to how much correlated (if any) the observations in a time series are. Keep in mind that autocorrelation computes the correlation between a variable and its *lagged* values. A simple example follows below:
 
 ```{r}
-hours <- read_csv("hours.dat")
+data(hours) #<1>
+hours <- as_tsibble(hours) #<2> 
 
-hours$month <- seq.Date(as.Date("1982/07/01"), as.Date("1987/06/01"), "month")
-
-hours <- hours %>%
-  mutate(month = yearmonth(month)) #convert full dates to year-month representation
-
-(hours_ts <- as_tsibble(hours, index = month))
+auto_corr <- ACF(hours, y = value) # <3> 
+#create correlogram
+autoplot(auto_corr) #<4>
 ```
+
+1.  extracts `hours` dataset from TSA package
+2.  convert into a tsibble
+3.  computes autocorrelation along time lags (`lag = 1 month`)
+4.  plots the correlogram
 
 ```{r}
-(auto_corr <- ACF(hours_ts, y = hours)) #the outside () make the output appear directly
+(auto_corr <- ACF(hours, y = hours)) #<1>
 ```
+
+1.  the outside `()` make the output appear directly
 
 ```{r}
 autoplot(auto_corr, y = hours)

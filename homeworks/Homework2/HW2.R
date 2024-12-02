@@ -1,6 +1,7 @@
 #install.packages("TSA")
-install.packages("readr")
-install.packages("tsibbledata")
+#install.packages("readr")
+#install.packages("tsibbledata")
+#install.packages("pacman")
 library(tsibbledata)
 library(TSA)
 library(ggplot2)
@@ -10,29 +11,17 @@ library(tidyquant)
 library(forecast)
 library(readr)
 library(latex2exp)
-install.packages("pacman")
 library(pacman)
 p_load(tsibbledata, TSA, ggplot2, fpp3)
 
-setwd("~/Desktop/UniTrento/Tutorato/Software R (English)/DAF/Homework2")
+#setwd("Homework2")
 
 # Exercise 1 ---------------------------------------------------------------------
-
-hours <- read_csv("hours.dat")
-
-hours$month <- seq.Date(as.Date("1982/07/01"), as.Date("1987/06/01"), "month")
-
-hours <- hours %>%
-  mutate(month = yearmonth(month))
-
-hours <- mutate(hours, month = yearmonth(month))
-
-#hours <- select(hours, -month1)
-
-hours_ts <- as_tsibble(hours, index = month)
+data(hours) #extracts hours dataset from TSA package
+hours <- as_tsibble(hours)
 
 #computes autocorrelation along time lags (lag = 1 month)
-auto_corr <- ACF(hours_ts, y = hours)
+auto_corr <- ACF(hours, y = value)
 #create correlogram
 autoplot(auto_corr) #what is possible to see is a significant positive correlation up to lag 5
 
