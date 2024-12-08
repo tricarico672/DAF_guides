@@ -1,0 +1,259 @@
+---
+title: "Chapter 7 Review"
+author: "Anthony Tricarico"
+link-citations: true
+number-sections: true
+
+mainfont: Times New Roman
+
+format:  
+  pdf:
+    toc: true                 # Adds a TOC for PDF as well
+    margin-top: 1.5cm         # Sets top margin for PDF
+    margin-left: 2cm          # Left margin for better readability
+    margin-right: 2cm         # Right margin for better readability
+    keep-tex: false
+    fig-align: center
+
+# Aesthetic options for code rendering
+code-block-style: github      # Styles code blocks similar to GitHub's appearance
+code-fold: true               # Allows readers to fold/unfold code blocks
+code-overflow: wrap           # Ensures code stays within margins
+page-layout: article          # Article layout keeps focus on content
+editor: visual
+---
+
+The main topic of this chapter is [regression models](https://www.scribbr.com/statistics/simple-linear-regression/). In particular, we start the discussion with simple linear regression models and how those are useful in estimating the relationship between two variables: a *dependent variable* (aka *forecast variable*) and an *independent variable* (also called *predictor*). We expand the discussion to cover multiple linear regression which allows us to include more than one predictor in our model and allows us to model more complex real-world phenomena which might depend on more than one independent variable.
+
+::: callout-tip
+Make sure that you go over all the previous chapters as in this one we will only be discussing the new concepts and it will be very likely that the functions encountered in previous chapters will not be discussed in-depth anymore. Whenever lines of code are skipped you can refer back to the original version of the script (`chap7.R`).
+
+Also, whenever you have doubts, have a look at the links that are scattered throughout the review. There you can find different explanations with simpler examples that might help you.
+:::
+
+Let's load the `fpp3` package before we do anything else. This ensures that we will have (most) of the functions we will need throughout the chapter.
+
+```{r}
+library(fpp3)
+```
+
+```{r setup, include = F}
+# Global options for R code chunks
+knitr::opts_chunk$set(fig.align = "center")
+```
+
+# Time series linear regression
+
+To estimate the relationship between two (or more) time series we use regression methods.
+
+## Simple linear regression
+
+In a simple linear regression you have exactly one prediction variable and one predictor. The equation that determines the form of such regression models is of the following type:
+
+$$
+y_{t} = \beta_{0} + \beta_{1} *x_{t} + \epsilon_{t}
+$$
+
+where $\beta_0$ is the intercept and $\beta_1$ is the coefficient associated to our predictor variable $x$. Since this can be viewed as the equation of a line the $\beta_1$ coefficient is also referred to as the *slope* of the regression line. The $\epsilon$ refers to the *error* which captures the variation in $y_t$ that $x_t$ does not explain.
+
+The code to be used to set up a linear model in R was already encountered in chapter 5. We review it here:
+
+```{r, echo=FALSE, results='hide'}
+model(us_change, TSLM(Consumption ~ Income)) #<1>
+```
+
+1.  use `TSLM()` inside the `model()` function whenever you want to set up a time series linear model (spoiler: you'll be doing a lot of that so remember the syntax)
+
+Here, `Consumption` is our prediction variable $y$ and the only predictor used $x_1$ is `Income`. We can wrap our fitted model inside the report() function to get a summary of the hypothesis tests on the estimated coefficients $\hat{\beta_0}$ and $\hat{\beta_1}$ in our model and of the overall significance of the model.
+
+::: callout-important
+The $\hat{\beta_1}$ notation means that we are now referring to the estimated coefficient and not to the true (unknown) coefficient.
+:::
+
+```{r}
+report(model(us_change, TSLM(Consumption ~ Income)))
+```
+
+You can check the [textbook](https://otexts.com/fpp3/regression-intro.html) (chapter 7.1) to review how to interpret the coefficients. We can also add the regression line to the scatterplot by adding the `geom_smooth()` layer to a ggplot object and setting the method to `"lm"` (i.e., linear model) and specifying that we do not want the standard error (`se`) bars to show (`se = FALSE`)
+
+```{r}
+ggplot(us_change, aes(x = Income, y = Consumption)) +
+  labs(y = "Consumption (quarterly % change)",
+       x = "Income (quarterly % change)") + 
+  geom_point() + 
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+Also note that in the following call to `autoplot` the `vars` function is used to put together different variables and plot them all together.
+
+```{r}
+autoplot(us_change,vars(Production,Savings,Unemployment)) + 
+  ylab("% change") + 
+  xlab("Year")
+```
+
+## Multiple linear regression {#sec-multiple-linear-regression}
+
+When we want to model more complex phenomena, we resort to using multiple linear regression to specify that the prediction variable $y$ depends on more than one predictor (i.e., different $x$'s).
+
+Before specifying the model, we might want to check the correlation between the different variables. Specifically, we want to see how each potential predictor $x_i$ correlates to the prediction variable $y$. With `ggpairs()` from the `GGally` package we can do that while simultaneously checking also the distribution of the different variables.
+
+```{r}
+GGally::ggpairs(us_change, columns = 2:6)
+```
+
+Then we can fit the multiple regression model to the data. This is done simply by specifying other predictors inside the call to TSLM each separated by a + sign as shown below.
+
+```{r}
+fit_consMR <- model(us_change,
+tslm = TSLM(Consumption ~ Income + Production + Unemployment + Savings))
+```
+
+```{r}
+report(fit_consMR)
+```
+
+Now also the report will include the different predictors along with their estimated coefficients (in the `Estimate` column). For the significance of each individual predictor you can refer to the last column which reports the p-value (smaller is better!).
+
+Using augment() we can now retrieve the fitted values (i.e., what the model estimates for $y_t$ at each time $t$) and compare it to actual data to visualize how well our model fits the data.
+
+```{r}
+ggplot(augment(fit_consMR), aes(x = Quarter)) +
+  geom_line(aes(y = Consumption, colour = "Data")) +
+  geom_line(aes(y = .fitted, colour = "Fitted")) +
+  labs(y = NULL, title = "Percent change in US consumption expenditure") +
+  guides(colour = guide_legend(title = NULL))
+```
+
+From the plot we see our model fits the data pretty well.
+
+An alternative way of visualizing how well our model fits the data is by plotting the fitted values to the actual values and then adding an identity line (a line of equation $y=x$) to the plot and check how close to the line the points are (closer to the line implying a better fit).
+
+```{r}
+ggplot(augment(fit_consMR), aes(x = Consumption, y = .fitted)) +
+  geom_point() + 
+  labs(y = "Fitted values",
+    x = "Data (actual values)",
+    title = "Percent change in US consumption expenditure") +
+  geom_abline(intercept = 0, slope = 1, color = "red")
+```
+
+## Diagnostics of residuals
+
+As usual, this is done by using the `gg_tsresiduals()` function passing as argument inside the function the fitted model.
+
+```{r}
+gg_tsresiduals(fit_consMR)  
+```
+
+Then we can compute the Ljung-Box statistic to determine the presence of autocorrelation within the residuals of the model.
+
+```{r}
+features(augment(fit_consMR),.innov, ljung_box, lag = 10, dof = 0)
+```
+
+A low enough p-value (even below .1) implies that there is a systematic pattern in the distribution of the residuals, and that therefore the residuals are not randomly distributed (i.e., not resulting from a [white noise process](https://math.stackexchange.com/questions/2944192/in-probability-what-is-exactly-a-noise-and-a-white-noise)). This is usually a problem that we want to address in our model.
+
+Remember that having mean equal to 0 is also a property that is assumed for residuals in a model to respect along with other assumptions which you can check at the end of chapter 7.1.
+
+# New applications to chapter 7
+
+In this section we gather some common lines of code that you can find useful to find solution to exercises.
+
+## Checking relevance of predictors
+
+When fitting a model to data we might want to understand which predictors are more likely to be related to the prediction variable. One visual approach to do this has been outlined at the beginning of @sec-multiple-linear-regression. Now we have a look at how to use glance to access model-specific statistics that can be used to compare one model to others and be sure to check the model that performs better on the given indicators.
+
+```{r}
+select(glance(fit_consMR), adj_r_squared, CV, AIC, AICc, BIC)
+```
+
+By using the code above, we check 5 different measurements of fitness to the data. Each has a different interpretation. For instance a higher value for the adjusted R squared means that a model fits well the data, but a lower AIC also implies a better fit to the data! Check section 7.5 of the textbook to learn more about this.
+
+## Producing forecasts
+
+Now we move on to using our model to produce forecasts. One way to do that is by using the `new_data()` function which appends to the end of a dataset the number of rows specified in the second argument passed inside it. Here we are adding 4 rows (equivalent to 4 quarters) at the end of the `us_change` dataset.
+
+```{r}
+fit_consBest <- model(us_change,
+    lm = TSLM(Consumption ~ Income + Savings + Unemployment))
+(NewData <- new_data(us_change, 4))
+
+```
+
+With `scenarios()` we can also specify different scenarios with specific values for the predictors employed in our model. New scenarios are specified by starting from our NewData and forecasting based on the values set for each individual scenario by `mutate()`.
+
+```{r}
+(future_scenarios <- scenarios(Increase = mutate(NewData,
+  Income=1, Savings=0.5, Unemployment=0),
+  Decrease = mutate(NewData, Income=-1, Savings=-0.5,
+  Unemployment=0),
+  names_to = "Scenario"))
+```
+
+Now we make forecasts for each scenario using the forecast function. Notice the `new_data` argument which is used to specify which dataset (or subset thereof) contains the values of the predictors that we want to use to make predictions about our $y$ (`consumption` in our case).
+
+```{r}
+(fc <- forecast(fit_consBest, new_data = future_scenarios))
+```
+
+## Nonlinear regression {#sec-nonlinear-regression}
+
+Sometimes, it might be the case that the relationship between our prediction variables and the predictors is not linear. It is in cases like these that we can transform our prediction variable to get back to a linear relationship and use the methods discussed so far.
+
+::: callout-tip
+Remember the relationship between polynomials and linear functions. For instance, a polynomial of degree 2 can be returned to its linear form by taking the square root (i.e. it reduces the degree back to 1). Practically, if I take the following quadratic relationship given by:
+
+$$
+y = x^2
+$$
+
+this can be translated back into a linear relationship by taking the square root of both sides.
+
+$$
+\sqrt{y} = x
+$$
+
+Similarly, we can apply this procedure of applying the inverse function to [exponential](https://www.sparknotes.com/math/precalc/exponentialandlogarithmicfunctions/section2) (using logarithmic functions) and other non-linear relationships to get back to a linear form (at least in the estimated parameters of the model!).
+:::
+
+```{r, echo=FALSE, results='hide'}
+BMafter1924 <- filter(boston_marathon, Year >= 1924)
+boston_men0 <- filter(BMafter1924, Event == "Men's open division")
+boston_men <- mutate(boston_men0, Minutes = as.numeric(Time)/60)
+```
+
+In the following code, we specify three models:
+
+1.  a model using no transformations and only `trend()` as a predictor.
+2.  a model applying a log transformation to the prediction variable $y$.
+3.  a `piecewise` model which estimates different coefficients for each time period specified in the `knots` argument inside of `trend`.
+
+```{r}
+fit_trends <- model(boston_men, linear = TSLM(Minutes ~ trend()),
+    exponential = TSLM(log(Minutes) ~ trend()),
+    piecewise = TSLM(Minutes ~ trend(knots = c(1950, 1980))))
+fc_trends <- forecast(fit_trends, h = 10)
+```
+
+Now in this plot we see how well each model fits the data.
+
+```{r}
+autoplot(boston_men, Minutes) +
+  geom_line(data = augment(fit_trends), aes(y = .fitted,
+  colour = .model)) +
+  autolayer(fc_trends, alpha = 0.5, level = 95) +
+  labs(y = "Minutes", title = "Boston marathon winning times")
+```
+
+## Piecewise method
+
+As you might have noticed, we encountered most of the methods outlined in @sec-nonlinear-regression in previous sections. However, one method we did not see before is the `piecewise` method. Using this method we can specify different trends to be estimated for each different time period. For instance in the third model specified in @sec-nonlinear-regression the three different trends are specified in the model. The first trend goes from the beginning up to 1950, another is estimated from 1950 to 1980 and the last goes from 1980 to the end of our time series. You can go back to @sec-nonlinear-regression and check how this is translated into code.
+
+```{r}
+fit_trends %>%
+  select(piecewise) %>%
+  report()
+```
+
+Here I also included a summary of the model that shows the three estimated coefficients for each trend period which shows that each one is statistically significant.
