@@ -1,0 +1,169 @@
+---
+title: "Chapter 8 Review"
+author: "Anthony Tricarico"
+link-citations: true
+number-sections: true
+
+mainfont: Times New Roman
+
+format:  
+  pdf:
+    toc: true                 # Adds a TOC for PDF as well
+    margin-top: 1.5cm         # Sets top margin for PDF
+    margin-left: 2cm          # Left margin for better readability
+    margin-right: 2cm         # Right margin for better readability
+    keep-tex: false
+    fig-align: center
+
+# Aesthetic options for code rendering
+code-block-style: github      # Styles code blocks similar to GitHub's appearance
+code-fold: true               # Allows readers to fold/unfold code blocks
+code-overflow: wrap           # Ensures code stays within margins
+page-layout: article          # Article layout keeps focus on content
+editor: visual
+---
+
+This chapter deals with exponential smoothing, a family of methods used to produce forecasts that attaches more importance (larger weight) to more recent observations.
+
+::: callout-important
+Examples taken for this chapter come straight out of the [book](https://otexts.com/fpp3/ses.html).
+
+Also, this is still a WIP.
+:::
+
+# Simple Exponential Smoothing
+
+Using this method, the further away in the past one observation is the lower the weight attached to it. This is one of the simplest ways to use exponential smoothing and implies an exponential decay of the past observations. The only parameter needed by this method is $\alpha$ which ranges from 0 to 1 and controls how small the weights attached to the preceding observation get (larger $\alpha$'s implying a faster decay of the weights).
+
+Using this technique, we are not taking into account any trend or seasonality patterns that might characterize the time series.
+
+In the [book](https://otexts.com/fpp3/ses.html) there are alternative ways of representing mathematically the functional form of the simple exponential smoothing method but we won't delve too much into them here. Among them, I'd recommend getting familiar with the *component form* which is used extensively in later sections.
+
+As it is usually the case with such methods, we can try and select the necessary parameters, or we can estimate them using the procedure below as explained in chapter 8:
+
+```{r}
+library(fpp3)
+```
+
+```{r}
+algeria_economy <- global_economy |>
+  filter(Country == "Algeria")
+algeria_economy |>
+  autoplot(Exports) +
+  labs(y = "% of GDP", title = "Exports: Algeria")
+```
+
+```{r}
+# Estimate parameters
+fit <- algeria_economy |>
+  model(ETS(Exports ~ error("A") + trend("N") + season("N")))
+fc <- fit |>
+  forecast(h = 5)
+
+tidy(fit) %>%
+  select(term, estimate)
+```
+
+Here we see the estimated $\alpha$ = 0.84 and $l_0$ = 39.5.
+
+# Holt's Linear Trend Method {#sec-holts-linear-trend-method}
+
+One way to model time series which present a trend is to use Holt's method. Using this method we are not only estimating a decay parameter $\alpha$ but we are also estimating a $\beta$ parameter to estimate by how much the trend component should decay as well. This would allow for a trending estimate that has now a linear functional form instead of a flat one.
+
+```{r}
+aus_economy <- global_economy |>
+  filter(Code == "AUS") |>
+  mutate(Pop = Population / 1e6)
+
+autoplot(aus_economy, Pop) +
+  labs(y = "Millions", title = "Australian population")
+```
+
+```{r}
+fit <- aus_economy |>
+  model(
+    AAN = ETS(Pop ~ error("A") + trend("A") + season("N"))
+  )
+fc <- fit |> forecast(h = 10)
+
+tidy(fit)
+```
+
+## Damped trend methods
+
+Since the method described above in @sec-holts-linear-trend-method produces forecasts that grow (or decline) indefinitely in the future, some other methods were developed to alleviate the issue of over-forecasting. The damped trend methods allow for the trend component to change in a way that observations that are very far into the future converge to a constant value and stop growing, reducing the probability of over-forecasting.
+
+```{r}
+aus_economy |>
+  model(
+    `Holt's method` = ETS(Pop ~ error("A") +
+                       trend("A") + season("N")),
+    `Damped Holt's method` = ETS(Pop ~ error("A") +
+                       trend("Ad", phi = 0.9) + season("N")) #<1>
+  ) |>
+  forecast(h = 15) |>
+  autoplot(aus_economy, level = NULL) +
+  labs(title = "Australian population",
+       y = "Millions") +
+  guides(colour = guide_legend(title = "Forecast"))
+```
+
+1.  The dampening parameter is specified by the argument `phi` inside of the `ETS` function. Remember that also `phi` must be in the interval \[0,1\]. Also, the short-hand `"Ad"` is now used to specify that we are using an *Additive Damped variant* in place of the standard Additive component. Moreover, when `phi` is not specified it will be estimated automatically as long as `"Ad"` has been specified before.
+
+# Holt-Winter's Method
+
+Similarly to what seen so far, we now want to also account for seasonality in the time series other than its trend. Luckily, the method explained in this section does exactly that in a way that is similar to what described in the previous sections. Since now we would like to also estimate how the seasonal component varies, we assign it a weight $\gamma$ that needs to be estimated. Using either the additive or the multiplicative formulation, we can estimate $\gamma$ and start producing forecasts using this method as well.
+
+```{r}
+aus_holidays <- tourism |>
+  filter(Purpose == "Holiday") |>
+  summarise(Trips = sum(Trips)/1000)
+fit <- aus_holidays |>
+  model(
+    additive = ETS(Trips ~ error("A") + trend("A") +
+                                                season("A")),
+    multiplicative = ETS(Trips ~ error("M") + trend("A") +
+                                                season("M"))
+  )
+fc <- fit |> forecast(h = "3 years")
+fc |>
+  autoplot(aus_holidays, level = NULL) +
+  labs(title="Australian domestic tourism",
+       y="Overnight trips (millions)") +
+  guides(colour = guide_legend(title = "Forecast"))
+```
+
+```{r}
+tidy(fit)
+```
+
+```{r}
+accuracy(fit) %>% #<1> 
+  select(.model, RMSE)
+```
+
+1.  Get in-sample accuracy
+
+## Holt-Winters’ damped method
+
+Similarly to the other methods, also here we can apply a dampening parameter to avoid over-forecasting in the future.
+
+```{r}
+sth_cross_ped <- pedestrian |>
+  filter(Date >= "2016-07-01",
+         Sensor == "Southern Cross Station") |>
+  index_by(Date) |>
+  summarise(Count = sum(Count)/1000)
+
+sth_cross_ped |>
+  filter(Date <= "2016-07-31") |>
+  model(
+    hw = ETS(Count ~ error("M") + trend("Ad") + season("M")) #<1>
+  ) |>
+  forecast(h = "2 weeks") |>
+  autoplot(sth_cross_ped |> filter(Date <= "2016-08-14")) +
+  labs(title = "Daily traffic: Southern Cross",
+       y="Pedestrians ('000)")
+```
+
+1.  Notice the damped trend component (`"Ad"`) and the multiplicative seasonality component (`"M"`). This is usually the standard when we want to produce forecasts using the Holt-Winters’ damped method.
