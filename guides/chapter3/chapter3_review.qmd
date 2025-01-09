@@ -109,8 +109,8 @@ To compute the moving average of a variable in your time series, you can follow 
     1.  the name of the dataset (which can be passed into the function also through a pipe operator)
     2.  the name of the column inside the dataset to use for computing the moving average
     3.  specify that you want to compute the mean
-    4.  set .before and .after to the number of observations you want to be in each average (the $k$ in @eq-moving-avg)
-    5.  set .complete = TRUE so that the function only computes the average for observations that have no values outside the specified range given by \[$-k$, $k$\].
+    4.  set `.before` and `.after` to the number of observations you want to be in each average (the $k$ in @eq-moving-avg)
+    5.  set `.complete = TRUE` so that the function only computes the average for observations that have no values outside the specified range given by \[$-k$, $k$\].
 
 The function `slide_dbl()` will return a vector (i.e., a column) containing the computed moving average of the column specified. You can then add the result of the function to the dataset using `mutate()`. Here follows an example:
 
