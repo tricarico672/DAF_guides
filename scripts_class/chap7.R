@@ -4,10 +4,12 @@ library(gridExtra)
 
 # Figure 7.2
 
-us_change
+df <- us_change
+
 us_change_long <- pivot_longer(us_change,
              c(Consumption, Income, Production, Savings, Unemployment),
              names_to="Series")
+
 autoplot(filter(us_change_long, Series=="Consumption" | Series=="Income"), value) +
   labs(y = "% change")
 
@@ -23,11 +25,12 @@ ggplot(us_change, aes(x = Quarter)) +
 
 ggplot(us_change, aes(x = Income, y = Consumption)) +
   labs(y = "Consumption (quarterly % change)",
-       x = "Income (quarterly % change)") + geom_point() + 
+       x = "Income (quarterly % change)") + 
+  geom_point() + 
   geom_smooth(method = "lm", se = FALSE)
 
 #to fit the linear regression model, use TSLM
-report(model(us_change, TSLM(Consumption ~ Income)))
+report(model(us_change, TSLM(Consumption ~ Income))) #time series linear model
 
 # Figure 7.4
 
@@ -40,6 +43,7 @@ GGally::ggpairs(us_change, columns = 2:6)
 
 fit_consMR <- model(us_change,
 tslm = TSLM(Consumption ~ Income + Production + Unemployment + Savings))
+
 report(fit_consMR)
 
 # Figure 7.6
@@ -53,10 +57,11 @@ ggplot(augment(fit_consMR), aes(x = Quarter)) +
 # Figure 7.7
 
 ggplot(augment(fit_consMR), aes(x = Consumption, y = .fitted)) +
-  geom_point() + labs(y = "Fitted values",
+  geom_point() + 
+  labs(y = "Fitted values",
     x = "Data (actual values)",
     title = "Percent change in US consumption expenditure") +
-  geom_abline(intercept = 0, slope = 1)
+  geom_abline(intercept = 0, slope = 1, color = "red")
   
 # Figure 7.8
   
@@ -69,33 +74,43 @@ features(augment(fit_consMR),.innov, ljung_box, lag = 10, dof = 0)
 data <- pivot_longer(left_join(us_change, residuals(fit_consMR),
 by = "Quarter"), Income:Unemployment, names_to = "regressor",
 values_to = "x")
-ggplot(data, aes(x = x, y = .resid)) + geom_point() +
+
+ggplot(data, aes(x = x, y = .resid)) + 
+  geom_point() +
   facet_wrap(. ~ regressor, scales = "free_x") +
   labs(y = "Residuals", x = "")
 
 # Figure 7.9 again (alternative solution)
 
 dataRes <- left_join(us_change, residuals(fit_consMR))
+
 p1 <- ggplot(dataRes,aes(x=Income,y=.resid)) + geom_point() +
   ylab('Residuals') + ggtitle('Income')
+
 p2 <- ggplot(dataRes,aes(x=Production,y=.resid)) + geom_point() +
   ylab('Residuals') + ggtitle('Production')
+
 p3 <- ggplot(dataRes,aes(x=Savings,y=.resid)) + geom_point() +
   ylab('Residuals') + ggtitle('Savings')
+
 p4 <- ggplot(dataRes,aes(x=Unemployment,y=.resid)) + geom_point() +
   ylab('Residuals') + ggtitle('Unemployment')
+
 grid.arrange(p1,p2,p3,p4,nrow=2)
 
 # Figure 7.10
 
 ggplot(augment(fit_consMR), aes(x = .fitted, y = .resid)) +
-  geom_point() + labs(x = "Fitted", y = "Residuals")
+  geom_point() + 
+  labs(x = "Fitted", y = "Residuals")
 
 # Spurious regression
 
 data <- left_join(filter(aus_airpassengers, Year <= 2011),
             guinea_rice, by = "Year")
+
 fit <- model(data, TSLM(Passengers ~ Production))
+
 report(fit)
 
 # Figure 7.13 
@@ -136,7 +151,9 @@ select(glance(fit_consMR), adj_r_squared, CV, AIC, AICc, BIC)
 # Figure 7.17
 
 recent_production <- filter(aus_production, year(Quarter) >= 1992)
+
 fit_beer <- model(recent_production, TSLM(Beer ~ trend() + season()))
+
 fc_beer <- forecast(fit_beer)
 autoplot(fc_beer, recent_production) + 
   labs(title = "Forecasts of beer production using regression",

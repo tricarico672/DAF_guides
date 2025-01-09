@@ -12,7 +12,7 @@ autoplot(filter(gdppc, Country == "Sweden"), GDP_per_capita) + #filter for Swede
 
 ggplot(filter(gdppc, Country == "Sweden"), aes(x=Year, y=GDP_per_capita)) +
   geom_point() +
-  geom_smooth(method="lm")
+  geom_smooth(method="lm", se = FALSE)
 
 # define the model
 
@@ -39,6 +39,7 @@ autoplot(fore, gdppc) +
        title = "GDP per capita for Sweden") # color='black'
 
 # Figure 5.3 (mean)
+is_tsibble(aus_production)
 
 recent_prod <- filter_index(aus_production, "1970 Q1" ~ "2004 Q4")
 bricks <- select(recent_prod,Bricks)
@@ -49,7 +50,9 @@ results_list <- mean_fit$'MEAN(Bricks)'[[1]] # extract output (2)
 mean_results <- results_list$fit
 
 mean_fc <- forecast(mean_fit, h = 12)
+
 bricks_mean = mutate(bricks,hline=mean_fc$.mean[1]) # add a dashed line
+
 autoplot(mean_fc, bricks, level = NULL) +
   autolayer(bricks_mean,hline,linetype='dashed',color='blue')
 
@@ -108,7 +111,7 @@ guides(colour = guide_legend(title = "Forecast"))
 
 recent_GOOG <- filter(gafa_stock, Symbol == "GOOG",
                       year(Date) >= 2015)
-
+is_tsibble(recent_GOOG)
 goog <- mutate(recent_GOOG, day = row_number())
 
 google_stock <- update_tsibble(goog, index = day, regular = TRUE)
@@ -198,6 +201,8 @@ autoplot(ACF(aug, .innov)) +
 gg_tsresiduals(model(google_2015, NAIVE(Close)))
 features(aug, .innov, list(avg = ~ mean(.,na.rm=TRUE)))
 
+mean(aug$.innov, na.rm = TRUE)
+
 # Portmanteau tests
 
 features(aug, .innov, box_pierce, lag = 10) # Box-Pierce
@@ -208,15 +213,16 @@ fit <- model(google_2015, RW(Close ~ drift()))
 tidy(fit) # estimate is (y_T-y_1)/(T-1)= (759-522)/251 = 0.944
 features(augment(fit), .innov, ljung_box, lag=10)
 
-hilo(forecast(model(google_2015, NAIVE(Close)), h = 10))
+h <- hilo(forecast(model(google_2015, NAIVE(Close)), h = 10))
 
 # Figure 5.14
 
 fore <- forecast(model(google_2015, NAIVE(Close)), h = 10)
-autoplot(fore, google_2015) +
-  labs(title="Google daily closing stock price", y="$US" )
 
-# Figure 5.15
+autoplot(fore, google_2015) +
+  labs(title="Google daily closing stock price", y="$US")
+
+# Figure 5.15 ()
 
 fit <- model(google_2015, NAIVE(Close))
 sim <- generate(fit, h = 30, times = 5, bootstrap = TRUE)
@@ -224,8 +230,9 @@ sim
 
 ggplot(google_2015, aes(x = day)) +
   geom_line(aes(y = Close)) +
-  geom_line(aes(y = .sim, colour = as.factor(.rep)), data = sim) +
-  labs(title="Google daily closing stock price", y="$US" ) +
+  geom_line(data = sim, aes(y = .sim, colour = as.factor(.rep))) +
+  labs(title="Google daily closing stock price", 
+       y="$US" ) +
   guides(colour = "none")
 
 fc <- forecast(fit, h = 30, bootstrap = TRUE) # , times=100
@@ -238,7 +245,9 @@ autoplot(fc, google_2015) +
 
 fore <- forecast(model(google_2015, NAIVE(Close)), h = 10,
         bootstrap = TRUE, times = 1000)
+
 hilo(fore)
+
 
 # Figure 5.18 (forecast the seasonally adjusted time series)
 
@@ -269,13 +278,15 @@ autoplot(forecast(fit_dcmp), us_retail_employment) +
 gg_tsresiduals(fit_dcmp)
 features(augment(fit_dcmp), .innov, list(avg = ~ mean(.,na.rm=TRUE)))
 
+mean(augment(fit_dcmp)$.innov, na.rm = TRUE)
+
 # subsetting
 
 filter(aus_production, year(Quarter) >= 1995)
 
 slice(aus_production, n()-19:0) # last 20 observations
 
-slice(group_by(aus_retail, State, Industry), 1:12) # working with groups
+sl <- slice(group_by(aus_retail, State, Industry), 1:12) # working with groups
 
 # Forecast errors
 
@@ -306,6 +317,7 @@ google_fit <- model(google_2015, Mean = MEAN(Close),
     Drift = RW(Close ~ drift()))
 
 google_fc <- forecast(google_fit, google_jan_2016)
+
 autoplot(google_fc, bind_rows(google_2015, google_jan_2016),
          level = NULL) +
   labs(y = "$US", title = "Google closing stock prices from Jan 2015") +
@@ -342,6 +354,7 @@ google_2015_tr <- relocate(stretch_tsibble(google_2015,
 
 fore <- forecast(model(google_2015_tr, RW(Close ~ drift())),
         h = 1)
+
 accuracy(fore, google_2015)
 
 # Training set accuracy
@@ -351,12 +364,16 @@ accuracy(model(google_2015, RW(Close ~ drift())))
 # Figure 5.24
 
 google_2015_tr <- stretch_tsibble(google_2015, .init = 3, .step = 1)
+
 fore <- forecast(model(google_2015_tr, RW(Close ~ drift())), h = 8)
+
 # forecasts for h=1,...,8
 test_group <- mutate(group_by(fore, .id), h = row_number())
 # for each group (i.e., each training set), set h equal to the row number of the group
 tgf = as_fable(test_group,response = "Close", distribution = Close)
+
 accMes = accuracy(tgf, google_2015, by = "h")
+
 ggplot(accMes, aes(x = h, y = RMSE)) +
   geom_point() # display RMSE for each training set and each h
 fc <- ungroup(tgf)

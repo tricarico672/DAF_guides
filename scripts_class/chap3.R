@@ -9,9 +9,10 @@ Sys.setlocale(locale = "English")
 
 guer <- features(aus_production, Gas, features = guerrero)
 lambda <- guer$lambda_guerrero
-autoplot(aus_production, box_cox(Gas, lambda)) + labs(y = "",
-title =TeX(paste0("Transformed gas production with $\\lambda$ = ",
-round(lambda,2))))
+autoplot(aus_production, box_cox(Gas, lambda)) + 
+  labs(y = "",
+       title =TeX(paste0("Transformed gas production with $\\lambda$ = ",
+                         round(lambda,2))))
 
 # Figure 3.5
 
@@ -51,8 +52,9 @@ autoplot(filter(global_economy, Country == "Australia"), Exports) +
 # Figure 3.10
 
 aus_exports <- mutate(filter(global_economy,
-    Country == "Australia"), `5-MA` =
-slide_dbl(Exports, mean, .before = 2, .after = 2, .complete = TRUE))
+    Country == "Australia"),
+    `5-MA` = slide_dbl(Exports, mean, .before = 2, .after = 2, .complete = TRUE))
+
 autoplot(aus_exports, Exports) +
   geom_line(aes(y = `5-MA`), colour = "#D55E00") +
   labs(y = "% of GDP", title = "Total Australian exports") #+

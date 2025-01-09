@@ -2,12 +2,14 @@ library(fpp3)
 library(gridExtra)
 library(tidyquant)
 library(forecast)
+library(GGally)
 
-setwd("/Users/anthony/Downloads")
+setwd("homeworks/Homework1/data")
 getwd() #to see the directory you're currently in
 
 tute1 <- readr::read_csv("tute1.csv")
 #tute1 <- readr::read_csv("~/Downloads/tute1.csv")
+tute_ts <- as_tsibble(tute1, index = Quarter)
 View(tute1)
 
 #turning tute1 into a tsibble
@@ -47,4 +49,18 @@ mytimeseries |>
   #geom_smooth(method = "lm") + #add regression line, if interested
   facet_grid(name ~ ., scales = "free_y")
 
+GGally::ggpairs(tute_ts, columns = 2:4)
 
+long_ts <- mytimeseries |>
+  pivot_longer(-Quarter)
+
+p0 <- ggplot(mytimeseries, aes(x = Sales, y = AdBudget)) +
+  geom_point()
+p1 <- ggplot(mytimeseries, aes(x = Sales, y = GDP)) +
+  geom_point()
+p2 <- ggplot(mytimeseries, aes(x = GDP, y = AdBudget)) +
+  geom_point()
+
+library(gridExtra)
+
+grid.arrange(p0,p1,p2, nrow = 3)
