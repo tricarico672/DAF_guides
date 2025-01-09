@@ -63,7 +63,9 @@ round(sum(filtered_dcmp$`sum(seasonal)`)) #practically zero, shows how the estim
 # ex4 ---------------------------------------------------------------------
 library(slider)
 
-series4 <- read.table("~/Desktop/UniTrento/Tutorato/Software R (English)/DAF/homeworks/Mock Exam/series4.csv", quote="\"", comment.char="")
+setwd("homeworks/Mock Exam")
+
+series4 <- read.table("series4.csv", quote="\"", comment.char="")
 
 names(series4) <- "series"
 
