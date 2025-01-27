@@ -1,0 +1,163 @@
+---
+title: "Exam January 12, 2024"
+author: "Anthony Tricarico"
+link-citations: true
+number-sections: true
+
+mainfont: Times New Roman
+
+format:  
+  pdf:
+    toc: true                 # Adds a TOC for PDF as well
+    margin-top: 1.5cm         # Sets top margin for PDF
+    margin-left: 2cm          # Left margin for better readability
+    margin-right: 2cm         # Right margin for better readability
+    keep-tex: false
+    fig-align: center
+
+# Aesthetic options for code rendering
+code-block-style: github      # Styles code blocks similar to GitHub's appearance
+code-fold: true               # Allows readers to fold/unfold code blocks
+code-overflow: wrap           # Ensures code stays within margins
+page-layout: article          # Article layout keeps focus on content
+editor: visual
+---
+
+::: callout-warning
+The following document should not be viewed as a solution to the exercises, but rather as a resource that can help you think about how you can solve similar problems. For issues, always refer back to the original solution provided by your Professor in class.
+:::
+
+# Exercise 1
+
+Holt's Linear Trend Method is one of the first models developed by Holt which expands on the classical exponential smoothing methods to include the possibility to smooth out time series that presented a trend component. As the name suggests, this method can be used with time series with a trend component that do not present a seasonal component.
+
+::: callout-tip
+Check out section 8.2 of the [book](https://otexts.com/fpp3/holt.html) to learn more about the actual equations involved in this method.
+:::
+
+# Exercise 2
+
+A prediction interval is an interval that with a certain level of confidence will contain the true value of the forecast variable at times $T+1, T+2, \dots, T+h$ where $h$ is the time horizon of the forecasts (i.e., how many periods into the future you want to produce the forecasts for). Usually predictions intervals get larger and larger the farther away they get from the last observation $T$ in the dataset.
+
+With large enough datasets we can assume the distribution of the residuals to be normal and we can compute the prediction intervals by using reference values from the standard normal distribution ($Z$ scores) which will vary depending on the level of confidence (1-$\alpha$) that we want to assign to the interval.
+
+However, when the assumption of normality for the residuals cannot be assumed to be respected, it would be better to use bootstrap-based prediction intervals as they will be more accurate in the estimates they produce.
+
+# Exercise 3
+
+We start by importing the necessary packages.
+
+```{r}
+library(fpp3)
+library(timetk)
+```
+
+```{r}
+df <- as_tsibble(taylor_30_min, index = date)
+```
+
+## Checking daily seasonality
+
+```{r}
+gg_season(df, period = "1d")
+```
+
+From this plot we see that there is a strong seasonality as every day from 6 to 12 there is a surge in electricity demand which lasts up until 18 and then decreases. Since this pattern is repeated every day, this is a strong evidence of the presence of daily seasonality.
+
+## Checking weekly seasonality
+
+```{r}
+gg_season(df, period = "1w")
+```
+
+The daily pattern that was visible before, is also reflected in this plot. However, when we look at the weekly seasonality we can only say that there is less electricity demand on average on weekend days compared to the other days of the week. Still it is a patter indicative of weekly seasonality.
+
+# Exercise 4
+
+As per usual, we start by importing the necessary packages. If you have troubles loading the packages, you can use `install.packages("name_of_dependency")` substituting the name inside the quotation marks with the name of the package whose absence is preventing the correct loading of the packages needed.
+
+```{r}
+library(Ecfun)
+library(Ecdat)
+```
+
+```{r}
+df <- as_tsibble(Hstarts)
+head(df)
+```
+
+We are asked to use the non-seasonally adjusted data so we filter the `df` to include only those rows having `key == "hs"`
+
+```{r}
+df_hs <- df %>%
+  filter(key == "hs")
+```
+
+## Point a)
+
+We can create a train test split based on the index (date) of a `tsibble` in the following way:
+
+```{r}
+train <- df_hs %>%
+  filter_index("1960 Q1" ~ "1994 Q4")
+
+test <- df_hs %>%
+  filter_index("1995 Q1" ~ "2001 Q4")
+```
+
+## Point b)
+
+```{r}
+stl_train <- train %>%
+  model(
+    "STL" = STL(value ~ trend() + season())
+  )
+```
+
+Notice that in the code above it is possible to change the `window` parameter inside the `trend` and `season` components but I left the default values to see how they perform.
+
+## Point c)
+
+```{r}
+mod_season_adj <- components(stl_train) %>%
+  select(index, season_adjust) %>%
+  model(
+    "nai_adj" = NAIVE(season_adjust),
+    "drift_adj" = RW(season_adjust ~ drift())
+  )
+
+mod_season_comp <- components(stl_train) %>%
+  select(index, season_year) %>%
+  model(
+    "snai_comp" = SNAIVE(season_year)
+  )
+```
+
+```{r}
+pred_adj <- forecast(mod_season_adj, h = nrow(test))
+pred_comp <- forecast(mod_season_comp, h = nrow(test))
+```
+
+## Point d)
+
+In the last point we put everything together. First we put together the estimated seasonally adjusted time series with the estimated trend and then we get the actual estimated prediction which is the result of the sum between these two estimated components.
+
+```{r}
+actual_pred_adj <- pred_adj %>%
+  select(index, season_adjust, .mean) %>%
+  mutate(.mean = .mean + pred_comp$.mean)
+```
+
+```{r}
+names(df_hs) <- c("index", "key", "season_adjust")
+accuracy(actual_pred_adj, df_hs)
+```
+
+Just out of curiosity we can plot out the results from the two models against the actual data.
+
+```{r}
+autoplot(df_hs) +
+  geom_line(data = actual_pred_adj, aes(x = index, y = .mean, color = .model))
+```
+
+We see that the best model is the drift model as it has the lowest RMSE.

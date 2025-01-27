@@ -1,0 +1,17 @@
+(WARN) `quarto render` invoked with no input file specified (the parameter order matters).
+Quarto will render the current directory by default.
+Did you mean to run `quarto render Exam_20240705.qmd -html`?
+Use `quarto render --help` for more information.
+(ERROR) The specified directory ('.') is not a Quarto project.
+(If you have not specified a path, quarto will attempt to render the entire current directory as a project.)
+
+Stack trace:
+(If you have not specified a path, quarto will attempt to render the entire current directory as a project.)
+    at render (file:///Applications/RStudio.app/Contents/Resources/app/quarto/bin/quarto.js:82918:19)
+    at async Command.actionHandler (file:///Applications/RStudio.app/Contents/Resources/app/quarto/bin/quarto.js:83077:32)
+    at async Command.execute (file:///Applications/RStudio.app/Contents/Resources/app/quarto/bin/quarto.js:8017:13)
+    at async Command.parseCommand (file:///Applications/RStudio.app/Contents/Resources/app/quarto/bin/quarto.js:7907:20)
+    at async quarto (file:///Applications/RStudio.app/Contents/Resources/app/quarto/bin/quarto.js:118224:9)
+    at async file:///Applications/RStudio.app/Contents/Resources/app/quarto/bin/quarto.js:118244:9
+    at async mainRunner (file:///Applications/RStudio.app/Contents/Resources/app/quarto/bin/quarto.js:118128:9)
+    at async file:///Applications/RStudio.app/Contents/Resources/app/quarto/bin/quarto.js:118235:5

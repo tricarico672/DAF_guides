@@ -1,0 +1,155 @@
+---
+title: "Exam February 14, 2024"
+author: "Anthony Tricarico"
+link-citations: true
+number-sections: true
+
+mainfont: Times New Roman
+
+format:  
+  pdf:
+    toc: true                 # Adds a TOC for PDF as well
+    margin-top: 1.5cm         # Sets top margin for PDF
+    margin-left: 2cm          # Left margin for better readability
+    margin-right: 2cm         # Right margin for better readability
+    keep-tex: false
+    fig-align: center
+
+# Aesthetic options for code rendering
+code-block-style: github      # Styles code blocks similar to GitHub's appearance
+code-fold: true               # Allows readers to fold/unfold code blocks
+code-overflow: wrap           # Ensures code stays within margins
+page-layout: article          # Article layout keeps focus on content
+editor: visual
+---
+
+::: callout-warning
+The following document should not be viewed as a solution to the exercises, but rather as a resource that can help you think about how you can solve similar problems. For issues, always refer back to the original solution provided by your Professor in class.
+:::
+
+# Exercise 1
+
+In a multiple regression model it is important to select the most relevant predictors so that we can get the optimal set of predictors that explains most of the variation in the dependent variable without drastically increasing the complexity of the model. To achieve this we can compare different models with different numbers of predictors on specific metrics such as the AIC, the AICc, and CV statistics. After comparing the models on such statistics, we select the one that scores the lowest on all three (or most of them, although for large $n$ they will tend to agree).
+
+::: callout-tip
+You can read more about this in [section 7.5](https://otexts.com/fpp3/selecting-predictors.html) of the book.
+:::
+
+# Exercise 2
+
+In case we wanted to use a multiple linear regression to make predictions based on a time series with a linear trend and a seasonal effect we can simply include the trend as a predictor and create dummy variables to account for the effect that each different season might have on the dependent variable. However, for this approach to work optimally we have to assume that there is a fixed seasonal pattern that does not change with the level of the time series and is periodic (i.e., it repeats at regular intervals). Also, the linear regression follows an additive model but if the data exhibits a multiplicative seasonal effect, this might require the implementation of log-transformed variables in the model.
+
+# Exercise 3
+
+## Point a)
+
+As usual we import the packages that we'll need throughout the analysis.
+
+```{r}
+library(Ecdat)
+library(fpp3)
+```
+
+Then we import the dataset and have a look at the first 5 rows using the `head` function.
+
+```{r}
+df <- Capm
+head(df)
+```
+
+Then we create a sequence of dates in order to later assign them as the index of the `df`.
+
+```{r}
+dates <- seq.Date(from = as.Date("1960-01-01"), to = as.Date("2002-12-01"), by = "month")
+```
+
+Finally, we define the `tsibble` and we select only the `rcon` column as asked previously.
+
+```{r}
+df_ts <- df %>%
+  mutate(date = yearmonth(dates)) %>%
+  as_tsibble(index = date) %>%
+  select(rcon)
+```
+
+## Point b)
+
+```{r}
+autoplot(ACF(df_ts, y = rcon))
+```
+
+There appears to be a strong autocorrelation at lags 1, 14, and 19.
+
+## Point c)
+
+```{r}
+autoplot(df_ts)
+```
+
+```{r}
+features(df_ts, rcon, ljung_box, lag = 10)
+```
+
+Here we assumed that there is not strong seasonality in the data and so we use a `lag` of 10 as suggested by the literature on the topic and by the book in [section 5.4](https://otexts.com/fpp3/diagnostics.html)
+
+## Point d)
+
+Based on the level of significance ($\alpha$) that we select for the test this series can be viewed as white-noise or not. If we pick a less restrictive $\alpha$, say .1, then we can say that the test is statistically significant as the $p$ value of .054 \< .1 = $\alpha$. Therefore, we reject the null hypothesis and we say that the series is not white-noise.
+
+# Exercise 4
+
+## Point a)
+
+```{r}
+library(fma)
+```
+
+```{r}
+df_ts <- as_tsibble(condmilk)
+```
+
+## Point b)
+
+```{r}
+cv <- stretch_tsibble(df_ts, .step = 1, .init = 60)
+```
+
+```{r, warning=FALSE}
+cv %>%
+  model(
+    "additive" = ETS(value ~ error("A") + trend("A") + season("A")),
+    "multiplicative" = ETS(value ~ error("M") + trend("A") + season("M"))
+  ) %>%
+  predict(h = 1) %>%
+  accuracy(df_ts) %>%
+  select(.model, RMSE, MAE, MAPE)
+```
+
+All the accuracy measures seem to point to the fact that the additive model is the better one as it gets the lowest error scores across all three indicators selected.
+
+## Point c)
+
+```{r}
+additive <- df_ts %>%
+  model(
+    "additive" = ETS(value ~ error("A") + trend("A") + season("A")),
+  )
+
+report(additive)
+```
+
+The estimated smoothing parameters are presented in the summary produced above with the `report` function.
+
+-   $\alpha$ controls how rapidly past observations should decay, with a value close to 1 indicating that the time series modeled changes very fast and therefore requires past observations to carry a very small weight and, conversely, recent observations to be more influent.
+
+-   $\beta$ controls the smoothing rate of the trend component. Here a value close to 0 indicates that information coming from recent time periods are not that useful in estimating the trend and so they carry a small weight. Also, this is also coherent with the fact that the series does not seem to exhibit a clear trend anyway.
+
+-   $\gamma$ controls the smoothing rate of the seasonal component. Also in this case, since there is no strong seasonality the information that can be extracted from recent periods is close to 0 and so we need to assign more weight to all the possible information we can have from previous time periods.
+
+## Point d)
+
+Finally we compute the forecasts for the next 2 years specifying a time horizon ($h$) of 24 months.
+
+```{r}
+fore <- forecast(additive, h = 24)
+```
