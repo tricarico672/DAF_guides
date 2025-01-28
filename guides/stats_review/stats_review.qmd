@@ -317,6 +317,8 @@ Another useful distribution is the [T distribution](https://en.wikipedia.org/wik
 
 ## Hypothesis Testing {#sec-testhyp}
 
+### One-sided tests {#sec-one-sided-tests}
+
 Given two groups of people, you might be interested in understanding which group is taller on average. This can be translated into a test of hypothesis. Let's say you believe group 1 to be taller on average, how would you go about testing this quantitatively? First, let's define the two hypotheses:
 
 $$
@@ -324,23 +326,39 @@ H_0: \mu_1 \leq \mu_2
 $$
 
 $$
-H_a: \mu_1 > \mu_2
+H_1: \mu_1 > \mu_2
 $$
 
 Let's break this down:
 
 1.  Here $H_0$ is known as the [null hypothesis](https://en.wikipedia.org/wiki/Null_hypothesis), and it represents the [status quo](https://www.vocabulary.com/dictionary/status%20quo) or what we assume to be the truth.
-2.  $H_a$ is the [alternative](https://en.wikipedia.org/wiki/Alternative_hypothesis) (or research) hypothesis, and it is what we want to find evidence for. Note that finding supporting evidence for $H_a$ makes $H_0$ less credible. This derives from the way in which the two hypothesis are constructed and how one must necessarily be the complement of the other in order for this method to work.
+2.  $H_1$ is the [alternative](https://en.wikipedia.org/wiki/Alternative_hypothesis) (or research) hypothesis, and it is what we want to find evidence for. Note that finding supporting evidence for $H_1$ makes $H_0$ less credible. This derives from the way in which the two hypotheses are constructed and how one must necessarily be the complement of the other in order for this method to work.
 3.  $\mu_i$ for $i = {1,2}$ represents the theoretical population mean of group 1 and 2, which we are trying to infer from our sample data.
 
-Now, it would be useful to have a metric that could help us determine whether there is enough supporting evidence for $H_a$ to *reject* $H_0$. To do this, we introduce the concepts of [significance level](https://en.wikipedia.org/wiki/Statistical_significance) (denoted by $\alpha$) and [p-value](https://www.scribbr.com/statistics/p-value/#:~:text=A%20p%2Dvalue%2C%20or%20probability,to%20perform%20your%20statistical%20test.) (denoted by $p$). The p-value of a test is the probability of observing the result of our analysis if we assume that the null hypothesis is true. Of course, a small p-value tells us that what we observed is unlikely to happen if the null hypothesis was effectively true. How small the p-value needs to be to reject $H_0$ depends on the significance level we are using for our tests. Commonly, the .01, .05, and .1 significance levels are the most used ones, but there are scientific fields that require even smaller $\alpha$ (e.g., [physics](https://home.cern/resources/faqs/five-sigma)). Given the concepts of p-value and significance level just discussed, the following method is used to determine whether one should reject or do not reject the null hypothesis:
+Also, notice that the system of hypothesis reported below is the same as the one proposed above and you can easily check this using basic algebra.
+
+$$
+H_0: \mu_1 -\mu_2 \le 0
+$$
+
+$$
+H_1: \mu_1 -\mu_2 > 0
+$$
+
+This formulation is more useful as it reduces everything to a difference between the means of the two groups.
+
+::: callout-important
+This system of hypothesis is referred to as a *one-sided test of hypothesis*. This means that we are only interested in finding contradiction to $H_0$ in one direction (in this case in the upper tail). The direction in which we seek contradiction to $H_0$ is determined by the inequality sign used in $H_1$.
+:::
+
+Now, it would be useful to have a metric that could help us determine whether there is enough supporting evidence for $H_1$ to *reject* $H_0$. To do this, we introduce the concepts of [significance level](https://en.wikipedia.org/wiki/Statistical_significance) (denoted by $\alpha$) and [p-value](https://www.scribbr.com/statistics/p-value/#:~:text=A%20p%2Dvalue%2C%20or%20probability,to%20perform%20your%20statistical%20test.) (denoted by $p$). The p-value of a test is the probability of observing the result that we actually observed (from sample data) if we assume the null hypothesis to be true. Of course, a small p-value tells us that what we observed is unlikely to happen if the null hypothesis was effectively true. How small the p-value needs to be to reject $H_0$ depends on the significance level we are using for our tests. Commonly, the .01, .05, and .1 significance levels are the most used ones, but there are scientific fields that require even smaller $\alpha$ (e.g., [physics](https://home.cern/resources/faqs/five-sigma)). Given the concepts of p-value and significance level just discussed, the following method is used to determine whether one should reject or do not reject the null hypothesis:
 
 ::: callout-important
 1.  If $p < \alpha \rightarrow$ reject $H_0$
 2.  if $p > \alpha \rightarrow$ do not reject $H_0$
 :::
 
-To go back to our original height problem and to determine whether group 1 is truly taller on average compared to group 2 we need to introduce the t-statistic. The t-statistic comes from the T distribution and it is used to quantify by how much two sample means differ from each other.
+To go back to our original height problem and to determine whether group 1 is truly taller on average compared to group 2 we need to introduce the t-statistic. The t-statistic comes from the $T$ distribution and it is used to quantify by how much two sample means differ from each other.
 
 ```{r}
 set.seed(128) #<1>
@@ -369,7 +387,7 @@ hist(sample_2, xlim = c(164,180))
 abline(v=mean(sample_2), col="red", lwd=3)
 ```
 
-Finally, we conduct a t test to determine whether there is a significant difference in means between the two samples.
+Finally, we conduct a t-test to determine whether there is a significant difference in means between the two samples.
 
 ```{r}
 (t_test <- t.test(sample_1, sample_2, alternative = "greater"))
@@ -384,6 +402,59 @@ Given a level of significance $\alpha$ = .01 and a $p$ \< .001 we can reject $H_
 ::: callout-important
 Tests of hypotheses are everywhere in inferential statistics, so be sure to have familiarized with what discussed in this section.
 :::
+
+### Two-sided tests {#sec-two-sided-tests}
+
+Suppose now instead that we are interested in testing the following system of hypotheses:
+
+$$
+H_0: \mu_1 = \mu_2
+$$
+
+$$
+H_1: \mu_1 \neq \mu_2
+$$
+
+In this case finding contradiction to $H_0$ is the same as finding a large difference in the two means (in absolute value). Therefore, it does not matter whether it is a positive or a negative difference! When this happens, we say that we conduct a *two-sided test of hypothesis*.
+
+Using the same data as before, we can test this new hypothesis in the following way:
+
+```{r}
+(t_test <- t.test(sample_1, sample_2))
+```
+
+And we get the following p-value:
+
+```{r}
+t_test$p.value
+```
+
+### A note about p-values
+
+Following the interpretation given in @sec-one-sided-tests, a generic p-value for a test can be computed after obtaining a feasible test statistic from the data for which we know the distribution. In the case of the hypothesis tests about two population means discussed above, that test statistic is given by the t-value for which we know the reference distribution (i.e., Student's $T$). Then, given a distribution and its parameters, we can compute the p-value as the probability of observing values more extreme as the one observed. Namely, in the case of the test discussed in @sec-one-sided-tests we want to find $P(T_{df} > t)$ where $t$ stands for the computed t-value of the test. An example of computing the p-value manually follows below:
+
+```{r}
+pt(21.546, 197.8, lower.tail = F)
+```
+
+Instead, a p-value for the test proposed in @sec-two-sided-tests can be found by multiplying the probability found above by 2: $2P(T_{df} > t)$, so that the computation reduces to:
+
+```{r}
+2*pt(21.546, 197.8, lower.tail = F)
+```
+
+The reason why this applies is due to the symmetry of the $T$ distribution. You can see from the figure below that the area under the curve below the value -2 and above 2 is the same.
+
+```{r}
+x <- seq(-3,3,.01)
+y <- dt(x, 100)
+
+plot(x,y, main = "Density of T Distribution w/ 100 df", ylab = "density")
+abline(v = 2, col = "red", lwd = 2)
+abline(v = -2, col = "red", lwd = 2)
+```
+
+You can check that the p-values computed following this approach are practically equal to the ones found with the `t.test` function in @sec-one-sided-tests and @sec-two-sided-tests
 
 ## (Linear) Regression
 
@@ -415,15 +486,25 @@ summary(regression) #<2>
 1.  specify a linear model with the `lm()` function. Here we are specifying that `brain` is the dependent variable and `body` is the independent variable. After the comma, we tell R that these two variables should be retrieved from the `animals` dataset we saved before.
 2.  we then call the `summary()` function on our regression to view some important statistics that are returned
 
-From the output of the summary function we learn that the variable `body` is not a significant predictor of `brain` size! To see how we got to this conclusion, go to the column containing the p-value of the `body` variable (the last column). The p-value here is derived from the test of hypothesis that the t-statistic is different from 0. If we were to spell that out using the notation we developed in @sec-testhyp, we would get:
+From the output of the summary function we learn that the variable `body` is not a significant predictor of `brain` size! To see how we got to this conclusion, go to the column containing the p-value of the `body` variable (the last column). The p-value here is derived from the test of hypothesis that the expected value of the $\beta_{body}$ is different from 0. If we were to spell that out using the notation we developed in @sec-testhyp, we would get:
 
 $$
-H_0: t = 0
+H_0: E[\beta_{body}] = 0
 $$
 
 $$
-H_a: t \neq 0
+H_1: E[\beta_{body}] \neq 0
 $$
+
+Since each $\beta$ coefficient is a random variable itself, it means it has its own distribution. When we standardize the $\beta$ coefficient by dividing through its standard error, we get a t-value that is $T$ distributed.
+
+$$
+t = \frac{E[\beta] - 0}{se[\beta]}
+$$
+
+::: callout-important
+Although it does not play any role, it is useful to be reminded that technically we are subtracting the expected value of $\beta$ under the null hypothesis (0) before dividing by its standard error.
+:::
 
 If we compare the t-score of the `body` variable obtained from the `summary` of our regression we see that it is -0.027. Since after running the test the p-value is .9785 \> $\alpha$ = .1 it is concluded that body size is not a significant predictor of brain size in the samples of animals presented in this dataset. Therefore, we cannot interpret the estimated slope ($-4.326e^{-4}$). This is also the case because the significance for the overall model, reported as the p-value of the F-statistic at the bottom of the summary, is also greater than $\alpha$ = .1.
 
@@ -448,3 +529,4 @@ Since it is impossible to discuss everything about regressions in these few page
 
 1.  [YT short intro to regression Video](https://youtu.be/14mkCpJ7tKs?si=gF17WGfWBTTOf38z)
 2.  [YT Playlist on regression](https://youtube.com/playlist?list=PLblh5JKOoLUIzaEkCLIUxQFjPIlapw8nU&si=ldwNn7dwyE6ts7Q-)
+3.  [Funny (but useful) Stats channel](https://www.youtube.com/@statquest)
