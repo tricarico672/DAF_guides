@@ -36,9 +36,8 @@ cv %>%
     "multiplicative" = ETS(freight ~ error("M") + trend("A") + season("M"))
   ) %>%
   forecast(h = 1) %>%
-  accuracy(df_ts) %>%
-  dplyr::select(.model, RMSE)
+  accuracy(df_ts) #%>%
+  #dplyr::select(.model, RMSE)
 
 #point 4
-
 

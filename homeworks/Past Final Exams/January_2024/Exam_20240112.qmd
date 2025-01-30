@@ -116,48 +116,57 @@ stl_train <- train %>%
 
 Notice that in the code above it is possible to change the `window` parameter inside the `trend` and `season` components but I left the default values to see how they perform.
 
+```{r}
+components(stl_train)
+```
+
 ## Point c)
 
 ```{r}
-mod_season_adj <- components(stl_train) %>%
-  select(index, season_adjust) %>%
-  model(
-    "nai_adj" = NAIVE(season_adjust),
-    "drift_adj" = RW(season_adjust ~ drift())
-  )
+fit_dcmp_drift <- train %>% #<1>
+  model("drift" = decomposition_model( #<2>
+    STL(value ~ trend() + season()), #<3>
+    RW(season_adjust ~ drift()), #<4>
+    SNAIVE(season_year) #<5>
+  
+  ))
 
-mod_season_comp <- components(stl_train) %>%
-  select(index, season_year) %>%
-  model(
-    "snai_comp" = SNAIVE(season_year)
-  )
+fit_dcmp_naive <- train %>%
+  model("naive" = decomposition_model(
+    STL(value ~ trend() + season()),
+    NAIVE(season_adjust),
+    SNAIVE(season_year)
+  
+  ))
 ```
 
+1.  fit the model on the training subset.
+2.  specify that we are creating a model called "drift" using the `decomposition_model()` function.
+3.  specify the decomposition model that will be used to decompose the time series.
+4.  specify that the estimate for the trend should be given by a drift model.
+5.  specify that the estimate for the seasonal component should be given by a seasonal naive model.
+
 ```{r}
-pred_adj <- forecast(mod_season_adj, h = nrow(test))
-pred_comp <- forecast(mod_season_comp, h = nrow(test))
+pred_drift <- forecast(fit_dcmp_drift, h = nrow(test))
+pred_naive <- forecast(fit_dcmp_naive, h = nrow(test))
 ```
 
 ## Point d)
 
-In the last point we put everything together. First we put together the estimated seasonally adjusted time series with the estimated trend and then we get the actual estimated prediction which is the result of the sum between these two estimated components.
+In the last point we check the accuracy of each model to see which one makes better predictions.
 
 ```{r}
-actual_pred_adj <- pred_adj %>%
-  select(index, season_adjust, .mean) %>%
-  mutate(.mean = .mean + pred_comp$.mean)
+rbind(accuracy(pred_drift, df_hs), accuracy(pred_naive, df_hs))
 ```
 
-```{r}
-names(df_hs) <- c("index", "key", "season_adjust")
-accuracy(actual_pred_adj, df_hs)
-```
+We see that the best model is the drift model as it has the lowest RMSE.
 
 Just out of curiosity we can plot out the results from the two models against the actual data.
 
 ```{r}
-autoplot(df_hs) +
-  geom_line(data = actual_pred_adj, aes(x = index, y = .mean, color = .model))
+autoplot(df_hs, value) +
+  geom_line(data = pred_drift, aes(x = index, y = .mean, color = .model)) +
+  geom_line(data = pred_naive, aes(x = index, y = .mean, color = .model))
 ```
 
-We see that the best model is the drift model as it has the lowest RMSE.
+However, it is very difficult to check from the graph which model better approximates the data.
